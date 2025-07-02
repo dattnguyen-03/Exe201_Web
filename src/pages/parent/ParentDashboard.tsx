@@ -1,197 +1,254 @@
 import React from 'react'
-import { MapPin, Activity, AlertTriangle, Camera, Clock, CheckCircle } from 'lucide-react'
+import { User, MapPin, Activity, Clock, AlertTriangle, Camera, TrendingUp, Shield } from 'lucide-react'
 
 const ParentDashboard: React.FC = () => {
-  const childStatus = {
-    name: 'Emma Johnson',
-    location: 'Classroom A',
-    activity: 'Reading Time',
-    status: 'Safe'
+  const childData = {
+    name: 'Nguyễn Minh An',
+    age: 5,
+    class: 'Lớp Mẫu Giáo A',
+    currentLocation: 'Phòng học',
+    currentActivity: 'Đang vẽ tranh',
+    lastUpdate: '2 phút trước'
+  }
+
+  const todayStats = {
+    totalAlerts: 2,
+    resolvedAlerts: 1,
+    activeTime: '6h 30m',
+    behaviorScore: 85
   }
 
   const recentAlerts = [
     {
       id: 1,
-      type: 'Climbing',
-      time: '10:30 AM',
-      location: 'Playground',
-      severity: 'Medium',
-      resolved: false
+      type: 'Leo trèo',
+      severity: 'Cao',
+      time: '10:30',
+      location: 'Sân chơi',
+      status: 'Đã xử lý',
+      description: 'Bé đã leo lên thiết bị chơi không an toàn'
     },
     {
       id: 2,
-      type: 'Out of Zone',
-      time: '9:45 AM',
-      location: 'Hallway',
-      severity: 'Low',
-      resolved: true
-    },
-    {
-      id: 3,
-      type: 'Collision Risk',
-      time: '9:15 AM',
-      location: 'Classroom A',
-      severity: 'High',
-      resolved: true
+      type: 'Ra khỏi vùng an toàn',
+      severity: 'Trung bình',
+      time: '14:15',
+      location: 'Hành lang',
+      status: 'Đang xử lý',
+      description: 'Bé đã di chuyển ra ngoài khu vực được phép'
     }
   ]
 
-  const cameraStatus = [
-    { id: 1, location: 'Classroom A', status: 'Active', recording: true },
-    { id: 2, location: 'Playground', status: 'Active', recording: true },
-    { id: 3, location: 'Hallway', status: 'Disconnected', recording: false },
-    { id: 4, location: 'Cafeteria', status: 'Active', recording: true }
-  ]
+  const systemStatus = {
+    cameras: { total: 6, active: 6, status: 'Hoạt động tốt' },
+    ai: { status: 'Đang hoạt động', accuracy: 96 },
+    connection: { status: 'Ổn định', signal: 98 }
+  }
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-bold text-gray-900">Parent Dashboard</h1>
-        <p className="text-gray-600 mt-2">Real-time overview of your child's status and activities</p>
-      </header>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl p-6">
+        <h1 className="text-2xl font-bold mb-2">Chào mừng trở lại! 👋</h1>
+        <p className="text-blue-100">Theo dõi tình hình của {childData.name} hôm nay</p>
+      </div>
 
       {/* Child Status Card */}
-      <section className="card">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Child Status</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-primary-100 rounded-full">
-              <MapPin className="w-6 h-6 text-primary-600" />
+      <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center space-x-4">
+            <div className="h-16 w-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+              <User className="w-8 h-8 text-white" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Current Location</p>
-              <p className="font-semibold text-gray-900">{childStatus.location}</p>
+              <h2 className="text-xl font-bold text-gray-900">{childData.name}</h2>
+              <p className="text-green-700">{childData.class} • {childData.age} tuổi</p>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-success-100 rounded-full">
-              <Activity className="w-6 h-6 text-success-600" />
+          <div className="text-right">
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 text-sm font-medium">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+              Đang hoạt động
             </div>
+            <p className="text-sm text-gray-500 mt-1">{childData.lastUpdate}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-center space-x-3 p-3 bg-white rounded-lg shadow-sm">
+            <MapPin className="w-5 h-5 text-blue-600" />
             <div>
-              <p className="text-sm text-gray-500">Current Activity</p>
-              <p className="font-semibold text-gray-900">{childStatus.activity}</p>
+              <p className="text-sm text-gray-500">Vị trí hiện tại</p>
+              <p className="font-medium text-gray-900">{childData.currentLocation}</p>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-success-100 rounded-full">
-              <CheckCircle className="w-6 h-6 text-success-600" />
-            </div>
+          <div className="flex items-center space-x-3 p-3 bg-white rounded-lg shadow-sm">
+            <Activity className="w-5 h-5 text-purple-600" />
             <div>
-              <p className="text-sm text-gray-500">Safety Status</p>
-              <p className="font-semibold text-success-600">{childStatus.status}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-warning-100 rounded-full">
-              <Clock className="w-6 h-6 text-warning-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Last Update</p>
-              <p className="font-semibold text-gray-900">2 min ago</p>
+              <p className="text-sm text-gray-500">Hoạt động</p>
+              <p className="font-medium text-gray-900">{childData.currentActivity}</p>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-blue-700 font-medium">Cảnh báo hôm nay</p>
+              <p className="text-2xl font-bold text-blue-900">{todayStats.totalAlerts}</p>
+            </div>
+            <AlertTriangle className="w-8 h-8 text-blue-600" />
+          </div>
+        </div>
+
+        <div className="card bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-green-700 font-medium">Đã xử lý</p>
+              <p className="text-2xl font-bold text-green-900">{todayStats.resolvedAlerts}</p>
+            </div>
+            <Shield className="w-8 h-8 text-green-600" />
+          </div>
+        </div>
+
+        <div className="card bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-purple-700 font-medium">Thời gian hoạt động</p>
+              <p className="text-2xl font-bold text-purple-900">{todayStats.activeTime}</p>
+            </div>
+            <Clock className="w-8 h-8 text-purple-600" />
+          </div>
+        </div>
+
+        <div className="card bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-orange-700 font-medium">Điểm hành vi</p>
+              <p className="text-2xl font-bold text-orange-900">{todayStats.behaviorScore}</p>
+            </div>
+            <TrendingUp className="w-8 h-8 text-orange-600" />
+          </div>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Alerts */}
-        <section className="card">
+        <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Recent Alerts</h2>
-            <AlertTriangle className="w-5 h-5 text-warning-500" />
+            <h3 className="text-lg font-bold text-gray-900">Cảnh báo gần đây</h3>
+            <AlertTriangle className="w-5 h-5 text-orange-500" />
           </div>
-          
+
           <div className="space-y-3">
             {recentAlerts.map((alert) => (
-              <article key={alert.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium text-gray-900">{alert.type}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      alert.severity === 'High' ? 'bg-danger-100 text-danger-700' :
-                      alert.severity === 'Medium' ? 'bg-warning-100 text-warning-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
-                      {alert.severity}
-                    </span>
+              <div key={alert.id} className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="font-medium text-gray-900">{alert.type}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${alert.severity === 'Cao' ? 'bg-red-100 text-red-700' :
+                          alert.severity === 'Trung bình' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-gray-100 text-gray-700'
+                        }`}>
+                        {alert.severity}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">{alert.description}</p>
+                    <div className="flex items-center space-x-4 text-xs text-gray-500">
+                      <span>🕐 {alert.time}</span>
+                      <span>📍 {alert.location}</span>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-500">{alert.location} • {alert.time}</p>
+                  <div className={`ml-3 px-2 py-1 rounded-full text-xs font-medium ${alert.status === 'Đã xử lý' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                    }`}>
+                    {alert.status}
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  {alert.resolved ? (
-                    <CheckCircle className="w-5 h-5 text-success-500" />
-                  ) : (
-                    <AlertTriangle className="w-5 h-5 text-warning-500" />
-                  )}
-                </div>
-              </article>
+              </div>
             ))}
           </div>
-          
-          <div className="mt-4">
-            <button className="w-full btn-secondary">View All Alerts</button>
-          </div>
-        </section>
 
-        {/* Camera Status */}
-        <section className="card">
+          <button className="w-full mt-4 btn-secondary">
+            Xem tất cả cảnh báo
+          </button>
+        </div>
+
+        {/* System Status */}
+        <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Camera & AI Status</h2>
-            <Camera className="w-5 h-5 text-primary-500" />
+            <h3 className="text-lg font-bold text-gray-900">Tình trạng hệ thống</h3>
+            <Camera className="w-5 h-5 text-blue-500" />
           </div>
-          
-          <div className="space-y-3">
-            {cameraStatus.map((camera) => (
-              <article key={camera.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">{camera.location}</p>
-                  <p className="text-sm text-gray-500">
-                    {camera.recording ? 'Recording' : 'Not Recording'}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className={camera.status === 'Active' ? 'status-active' : 'status-inactive'}>
-                    {camera.status}
-                  </span>
-                </div>
-              </article>
-            ))}
+
+          <div className="space-y-4">
+            {/* Camera Status */}
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium text-blue-900">Camera giám sát</span>
+                <span className="text-sm font-medium text-blue-700">{systemStatus.cameras.active}/{systemStatus.cameras.total}</span>
+              </div>
+              <div className="w-full bg-blue-200 rounded-full h-2">
+                <div className="bg-blue-600 h-2 rounded-full" style={{ width: '100%' }}></div>
+              </div>
+              <p className="text-sm text-blue-700 mt-1">{systemStatus.cameras.status}</p>
+            </div>
+
+            {/* AI Status */}
+            <div className="p-4 bg-green-50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium text-green-900">Hệ thống AI</span>
+                <span className="text-sm font-medium text-green-700">{systemStatus.ai.accuracy}%</span>
+              </div>
+              <div className="w-full bg-green-200 rounded-full h-2">
+                <div className="bg-green-600 h-2 rounded-full" style={{ width: '96%' }}></div>
+              </div>
+              <p className="text-sm text-green-700 mt-1">{systemStatus.ai.status}</p>
+            </div>
+
+            {/* Connection Status */}
+            <div className="p-4 bg-purple-50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium text-purple-900">Kết nối mạng</span>
+                <span className="text-sm font-medium text-purple-700">{systemStatus.connection.signal}%</span>
+              </div>
+              <div className="w-full bg-purple-200 rounded-full h-2">
+                <div className="bg-purple-600 h-2 rounded-full" style={{ width: '98%' }}></div>
+              </div>
+              <p className="text-sm text-purple-700 mt-1">{systemStatus.connection.status}</p>
+            </div>
           </div>
-          
-          <div className="mt-4">
-            <button className="w-full btn-secondary">View Live Feed</button>
-          </div>
-        </section>
+        </div>
       </div>
 
       {/* Quick Actions */}
-      <section className="card">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+      <div className="card">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Thao tác nhanh</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button className="p-4 bg-primary-50 hover:bg-primary-100 rounded-lg text-center transition-colors">
-            <Camera className="w-6 h-6 text-primary-600 mx-auto mb-2" />
-            <span className="text-sm font-medium text-primary-700">Live View</span>
+          <button className="p-4 bg-blue-50 hover:bg-blue-100 rounded-xl text-center transition-colors group">
+            <Camera className="w-8 h-8 text-blue-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-medium text-blue-700">Xem trực tiếp</span>
           </button>
-          
-          <button className="p-4 bg-warning-50 hover:bg-warning-100 rounded-lg text-center transition-colors">
-            <AlertTriangle className="w-6 h-6 text-warning-600 mx-auto mb-2" />
-            <span className="text-sm font-medium text-warning-700">View Alerts</span>
+
+          <button className="p-4 bg-orange-50 hover:bg-orange-100 rounded-xl text-center transition-colors group">
+            <AlertTriangle className="w-8 h-8 text-orange-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-medium text-orange-700">Cảnh báo</span>
           </button>
-          
-          <button className="p-4 bg-success-50 hover:bg-success-100 rounded-lg text-center transition-colors">
-            <Activity className="w-6 h-6 text-success-600 mx-auto mb-2" />
-            <span className="text-sm font-medium text-success-700">Behavior Report</span>
+
+          <button className="p-4 bg-green-50 hover:bg-green-100 rounded-xl text-center transition-colors group">
+            <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-medium text-green-700">Báo cáo</span>
           </button>
-          
-          <button className="p-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-center transition-colors">
-            <MapPin className="w-6 h-6 text-gray-600 mx-auto mb-2" />
-            <span className="text-sm font-medium text-gray-700">Danger Zones</span>
+
+          <button className="p-4 bg-purple-50 hover:bg-purple-100 rounded-xl text-center transition-colors group">
+            <User className="w-8 h-8 text-purple-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-medium text-purple-700">Hồ sơ</span>
           </button>
         </div>
-      </section>
+      </div>
     </div>
   )
 }

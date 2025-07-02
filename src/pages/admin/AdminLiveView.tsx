@@ -1,103 +1,142 @@
 import React, { useState } from 'react'
-import { Camera, Maximize, Volume2, VolumeX, Users, User } from 'lucide-react'
+import { Camera, Maximize, Volume2, VolumeX, Users, User, Grid, Eye, Wifi, WifiOff, TrendingUp } from 'lucide-react'
 
-const ParentLiveView: React.FC = () => {
+const AdminLiveView: React.FC = () => {
     const [viewMode, setViewMode] = useState<'single' | 'full'>('single')
     const [selectedCamera, setSelectedCamera] = useState('classroom-a')
     const [audioEnabled, setAudioEnabled] = useState(false)
 
     const cameras = [
-        { id: 'classroom-a', name: 'Classroom A', status: 'active' },
-        { id: 'playground', name: 'Playground', status: 'active' },
-        { id: 'hallway', name: 'Hallway', status: 'inactive' },
-        { id: 'cafeteria', name: 'Cafeteria', status: 'active' }
+        { id: 'classroom-a', name: 'Phòng học A', status: 'Hoạt động', location: 'Tầng 1', students: 22 },
+        { id: 'playground', name: 'Sân chơi ngoài trời', status: 'Hoạt động', location: 'Ngoài trời', students: 45 },
+        { id: 'hallway', name: 'Hành lang chính', status: 'Bảo trì', location: 'Tầng 1', students: 0 },
+        { id: 'cafeteria', name: 'Phòng ăn tập thể', status: 'Hoạt động', location: 'Tầng 1', students: 38 }
     ]
 
     return (
-        <div className="space-y-6">
-            <header className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Live View</h1>
-                    <p className="text-gray-600 mt-2">Real-time monitoring of classroom activities</p>
-                </div>
+        <div className="space-y-6 animate-fade-in">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-2xl p-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold mb-2">📹 Giám sát trực tiếp toàn trường</h1>
+                        <p className="text-green-100">Theo dõi hoạt động của tất cả các lớp học trong thời gian thực</p>
+                    </div>
 
-                <div className="flex items-center space-x-4">
-                    <div className="flex bg-gray-100 rounded-lg p-1">
-                        <button
-                            onClick={() => setViewMode('single')}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'single'
-                                ? 'bg-white text-gray-900 shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900'
-                                }`}
-                        >
-                            <User className="w-4 h-4 inline mr-2" />
-                            Single Child
-                        </button>
-                        <button
-                            onClick={() => setViewMode('full')}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'full'
-                                ? 'bg-white text-gray-900 shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900'
-                                }`}
-                        >
-                            <Users className="w-4 h-4 inline mr-2" />
-                            Full Class
-                        </button>
+                    <div className="flex items-center space-x-4">
+                        <div className="flex bg-white/20 rounded-xl p-1">
+                            <button
+                                onClick={() => setViewMode('single')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 ${viewMode === 'single'
+                                    ? 'bg-white text-green-600 shadow-sm'
+                                    : 'text-white hover:bg-white/10'
+                                    }`}
+                            >
+                                <Eye className="w-4 h-4" />
+                                <span>Theo dõi cá nhân</span>
+                            </button>
+                            <button
+                                onClick={() => setViewMode('full')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 ${viewMode === 'full'
+                                    ? 'bg-white text-green-600 shadow-sm'
+                                    : 'text-white hover:bg-white/10'
+                                    }`}
+                            >
+                                <Grid className="w-4 h-4" />
+                                <span>Xem tổng quan</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </header>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 {/* Camera Selection */}
-                <aside className="lg:col-span-1">
+                <div className="lg:col-span-1">
                     <div className="card">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Camera Selection</h2>
-                        <div className="space-y-2">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">🎥 Danh sách camera</h3>
+                        <div className="space-y-3">
                             {cameras.map((camera) => (
                                 <button
                                     key={camera.id}
                                     onClick={() => setSelectedCamera(camera.id)}
-                                    className={`w-full p-3 rounded-lg text-left transition-colors ${selectedCamera === camera.id
-                                        ? 'bg-primary-50 border-2 border-primary-200'
+                                    className={`w-full p-4 rounded-lg text-left transition-all ${selectedCamera === camera.id
+                                        ? 'bg-blue-50 border-2 border-blue-200 shadow-md'
                                         : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
                                         }`}
                                 >
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex items-center justify-between mb-2">
                                         <span className="font-medium text-gray-900">{camera.name}</span>
-                                        <span className={camera.status === 'active' ? 'status-active' : 'status-inactive'}>
-                                            {camera.status}
-                                        </span>
+                                        <div className="flex items-center">
+                                            {camera.status === 'Hoạt động' ? (
+                                                <Wifi className="w-4 h-4 text-green-500" />
+                                            ) : (
+                                                <WifiOff className="w-4 h-4 text-red-500" />
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-gray-500">{camera.location}</span>
+                                        <span className="font-medium text-blue-600">{camera.students} em</span>
+                                    </div>
+                                    <div className={`mt-2 text-xs font-medium px-2 py-1 rounded-full inline-block ${camera.status === 'Hoạt động' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                        }`}>
+                                        {camera.status}
                                     </div>
                                 </button>
                             ))}
                         </div>
+
+                        {/* Camera Stats */}
+                        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                            <h4 className="font-bold text-blue-900 mb-3">📊 Thống kê camera</h4>
+                            <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-blue-700">Đang hoạt động:</span>
+                                    <span className="font-medium text-blue-900">3/4</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-blue-700">Tổng học sinh:</span>
+                                    <span className="font-medium text-blue-900">105 em</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-blue-700">Chất lượng trung bình:</span>
+                                    <span className="font-medium text-green-600">96%</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </aside>
+                </div>
 
                 {/* Main Video Feed */}
-                <main className="lg:col-span-3">
+                <div className="lg:col-span-3">
                     <div className="card">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-gray-900">
-                                Live Feed - {cameras.find(c => c.id === selectedCamera)?.name}
-                            </h2>
+                            <h3 className="text-lg font-bold text-gray-900 flex items-center space-x-2">
+                                <Camera className="w-5 h-5 text-blue-600" />
+                                <span>{cameras.find(c => c.id === selectedCamera)?.name}</span>
+                                <span className="text-sm text-gray-500">
+                                    ({cameras.find(c => c.id === selectedCamera)?.students} học sinh)
+                                </span>
+                            </h3>
 
                             <div className="flex items-center space-x-2">
                                 <button
                                     onClick={() => setAudioEnabled(!audioEnabled)}
-                                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                                    title={audioEnabled ? "Mute audio" : "Enable audio"}
+                                    className={`p-2 rounded-lg transition-colors ${audioEnabled ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
+                                        } hover:bg-gray-200`}
+                                    title={audioEnabled ? "Tắt âm thanh" : "Bật âm thanh"}
                                 >
                                     {audioEnabled ? (
-                                        <Volume2 className="w-5 h-5 text-gray-600" />
+                                        <Volume2 className="w-5 h-5" />
                                     ) : (
-                                        <VolumeX className="w-5 h-5 text-gray-600" />
+                                        <VolumeX className="w-5 h-5" />
                                     )}
                                 </button>
 
                                 <button
                                     className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                                    title="Fullscreen video"
+                                    title="Xem toàn màn hình"
                                 >
                                     <Maximize className="w-5 h-5 text-gray-600" />
                                 </button>
@@ -105,96 +144,143 @@ const ParentLiveView: React.FC = () => {
                         </div>
 
                         {/* Video Container */}
-                        <div className="relative bg-gray-900 rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
+                        <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl overflow-hidden shadow-lg" style={{ aspectRatio: '16/9' }}>
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="text-center text-white">
-                                    <Camera className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                                    <p className="text-lg font-medium">Live Video Feed</p>
+                                    <Camera className="w-20 h-20 mx-auto mb-4 opacity-50" />
+                                    <p className="text-xl font-medium">Video trực tiếp - Quản trị viên</p>
                                     <p className="text-sm opacity-75">Camera: {cameras.find(c => c.id === selectedCamera)?.name}</p>
                                 </div>
                             </div>
 
                             {/* AI Overlay Indicators */}
                             <div className="absolute top-4 left-4 space-y-2">
-                                <div className="bg-success-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                                    Child Detected
+                                <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+                                    ✓ Phát hiện {cameras.find(c => c.id === selectedCamera)?.students} trẻ em
                                 </div>
-                                <div className="bg-warning-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                                    Danger Zone Alert
+                                <div className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+                                    🎯 AI đang theo dõi
+                                </div>
+                                <div className="bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+                                    ⚠ 2 vùng cảnh báo
                                 </div>
                             </div>
 
-                            {/* Recording Indicator */}
+                            {/* Live Indicator */}
                             <div className="absolute top-4 right-4">
-                                <div className="flex items-center space-x-2 bg-danger-500 text-white px-3 py-1 rounded-full">
+                                <div className="flex items-center space-x-2 bg-red-500 text-white px-3 py-1 rounded-full shadow-lg">
                                     <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                                    <span className="text-sm font-medium">LIVE</span>
+                                    <span className="text-sm font-medium">TRỰC TIẾP</span>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Video Controls */}
-                        <div className="mt-4 flex items-center justify-between">
-                            <div className="flex items-center space-x-4">
-                                <span className="text-sm text-gray-500">Quality:</span>
-                                <select
-                                    className="text-sm border border-gray-300 rounded px-2 py-1"
-                                    title="Select video quality"
-                                >
-                                    <option>HD (720p)</option>
-                                    <option>Full HD (1080p)</option>
-                                    <option>4K</option>
-                                </select>
-                            </div>
-
-                            <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-500">AI Overlay:</span>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        className="sr-only peer"
-                                        defaultChecked
-                                        title="Toggle AI overlay display"
-                                    />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                                </label>
+                            {/* Admin Controls Overlay */}
+                            <div className="absolute bottom-4 left-4 space-y-2">
+                                <button className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium transition-colors">
+                                    📱 Gửi thông báo
+                                </button>
+                                <button className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-medium transition-colors">
+                                    📋 Tạo báo cáo
+                                </button>
                             </div>
                         </div>
-                    </div>
-                </main>
-            </div>
 
-            {/* AI Analysis Panel */}
-            <section className="card">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">AI Analysis</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center">
-                        <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <User className="w-8 h-8 text-success-600" />
-                        </div>
-                        <h3 className="font-medium text-gray-900">Child Tracking</h3>
-                        <p className="text-sm text-gray-500 mt-1">Active and visible</p>
-                    </div>
+                        {/* Enhanced Controls */}
+                        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-4">
+                                    <span className="text-sm font-medium text-gray-700">Chất lượng:</span>
+                                    <select
+                                        className="text-sm border border-gray-300 rounded-lg px-3 py-1 bg-white"
+                                        title="Chọn chất lượng video"
+                                    >
+                                        <option>HD (720p)</option>
+                                        <option>Full HD (1080p)</option>
+                                        <option>4K (Quản trị)</option>
+                                    </select>
+                                </div>
 
-                    <div className="text-center">
-                        <div className="w-16 h-16 bg-warning-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <div className="w-8 h-8 bg-warning-600 rounded"></div>
-                        </div>
-                        <h3 className="font-medium text-gray-900">Danger Zones</h3>
-                        <p className="text-sm text-gray-500 mt-1">2 zones highlighted</p>
-                    </div>
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex items-center space-x-2">
+                                        <span className="text-sm font-medium text-gray-700">Hiển thị AI:</span>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only peer"
+                                                defaultChecked
+                                                title="Bật/tắt hiển thị AI"
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    </div>
 
-                    <div className="text-center">
-                        <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <Camera className="w-8 h-8 text-primary-600" />
+                                    <div className="flex items-center space-x-2">
+                                        <span className="text-sm font-medium text-gray-700">Ghi âm:</span>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only peer"
+                                                title="Bật/tắt ghi âm"
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between text-sm text-gray-600">
+                                <span>🔋 Độ trễ: 0.2s</span>
+                                <span>📊 Băng thông: 2.4 MB/s</span>
+                                <span>⚡ FPS: 30</span>
+                            </div>
                         </div>
-                        <h3 className="font-medium text-gray-900">Activity Detection</h3>
-                        <p className="text-sm text-gray-500 mt-1">Reading activity</p>
                     </div>
                 </div>
-            </section>
+            </div>
+
+            {/* AI Analysis Panel - Enhanced for Admin */}
+            <div className="card">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">🤖 Phân tích AI chi tiết</h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="text-center p-4 bg-green-50 rounded-xl">
+                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <Users className="w-8 h-8 text-white" />
+                        </div>
+                        <h4 className="font-bold text-green-900 mb-1">Phát hiện trẻ em</h4>
+                        <p className="text-sm text-green-700">22/22 em đã xác định</p>
+                        <p className="text-xs text-green-600 mt-1">Độ chính xác: 98.5%</p>
+                    </div>
+
+                    <div className="text-center p-4 bg-yellow-50 rounded-xl">
+                        <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <div className="w-8 h-8 bg-yellow-600 rounded"></div>
+                        </div>
+                        <h4 className="font-bold text-yellow-900 mb-1">Vùng nguy hiểm</h4>
+                        <p className="text-sm text-yellow-700">2 vùng được giám sát</p>
+                        <p className="text-xs text-yellow-600 mt-1">0 vi phạm</p>
+                    </div>
+
+                    <div className="text-center p-4 bg-blue-50 rounded-xl">
+                        <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <Camera className="w-8 h-8 text-white" />
+                        </div>
+                        <h4 className="font-bold text-blue-900 mb-1">Hoạt động hiện tại</h4>
+                        <p className="text-sm text-blue-700">Giờ học tập trung</p>
+                        <p className="text-xs text-blue-600 mt-1">Mức độ tương tác: Cao</p>
+                    </div>
+
+                    <div className="text-center p-4 bg-purple-50 rounded-xl">
+                        <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <TrendingUp className="w-8 h-8 text-white" />
+                        </div>
+                        <h4 className="font-bold text-purple-900 mb-1">Xu hướng hành vi</h4>
+                        <p className="text-sm text-purple-700">Ổn định</p>
+                        <p className="text-xs text-purple-600 mt-1">Cảnh báo giảm 15%</p>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
 
-export default ParentLiveView
+export default AdminLiveView

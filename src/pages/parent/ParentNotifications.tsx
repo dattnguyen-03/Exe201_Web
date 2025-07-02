@@ -8,37 +8,37 @@ const ParentNotifications: React.FC = () => {
   const messages = [
     {
       id: 1,
-      from: 'Teacher Sarah',
-      subject: 'Emma\'s Progress Update',
-      message: 'Emma had a wonderful day today! She participated actively in reading time and showed great improvement in her social interactions.',
-      timestamp: '2 hours ago',
+      from: 'Cô Nguyễn Thị Lan',
+      subject: 'Báo cáo tiến bộ của bé An',
+      message: 'Hôm nay bé An có một ngày học rất tuyệt vời! Bé tham gia tích cực vào giờ đọc sách và có tiến bộ đáng kể trong giao tiếp với bạn bè.',
+      timestamp: '2 giờ trước',
       read: false,
       type: 'message'
     },
     {
       id: 2,
-      from: 'System Alert',
-      subject: 'Climbing Alert Resolved',
-      message: 'The climbing alert from playground has been reviewed and marked as resolved. Emma was safely supervised during play.',
-      timestamp: '4 hours ago',
+      from: 'Hệ thống cảnh báo',
+      subject: 'Cảnh báo leo trèo đã được xử lý',
+      message: 'Cảnh báo leo trèo từ sân chơi đã được xem xét và đánh dấu đã giải quyết. Bé An đã được giám sát an toàn trong giờ chơi.',
+      timestamp: '4 giờ trước',
       read: true,
       type: 'alert'
     },
     {
       id: 3,
-      from: 'School Admin',
-      subject: 'Weekly Report Available',
-      message: 'Your child\'s weekly behavior report is now available. You can view it in the Reports section.',
-      timestamp: '1 day ago',
+      from: 'Ban giám hiệu',
+      subject: 'Báo cáo tuần đã có',
+      message: 'Báo cáo hành vi hàng tuần của con em đã sẵn sàng. Bạn có thể xem trong phần Báo cáo.',
+      timestamp: '1 ngày trước',
       read: true,
       type: 'notification'
     },
     {
       id: 4,
-      from: 'Teacher Sarah',
-      subject: 'Pickup Reminder',
-      message: 'Just a friendly reminder that pickup time is 3:30 PM today. Emma will be waiting in the main classroom.',
-      timestamp: '2 days ago',
+      from: 'Cô Nguyễn Thị Lan',
+      subject: 'Nhắc nhở đón con',
+      message: 'Nhắc nhở thân thiện rằng giờ đón con hôm nay là 15:30. Bé An sẽ chờ ở lớp học chính.',
+      timestamp: '2 ngày trước',
       read: true,
       type: 'message'
     }
@@ -47,25 +47,25 @@ const ParentNotifications: React.FC = () => {
   const notifications = [
     {
       id: 1,
-      title: 'High Priority Alert',
-      message: 'Climbing behavior detected in playground area',
-      timestamp: '1 hour ago',
+      title: 'Cảnh báo mức độ cao',
+      message: 'Phát hiện hành vi leo trèo tại khu vực sân chơi',
+      timestamp: '1 giờ trước',
       priority: 'high',
       read: false
     },
     {
       id: 2,
-      title: 'Weekly Report Ready',
-      message: 'Your child\'s weekly behavior analysis is available',
-      timestamp: '3 hours ago',
+      title: 'Báo cáo tuần sẵn sàng',
+      message: 'Phân tích hành vi hàng tuần của con em đã có',
+      timestamp: '3 giờ trước',
       priority: 'medium',
       read: false
     },
     {
       id: 3,
-      title: 'System Update',
-      message: 'Camera system maintenance completed successfully',
-      timestamp: '6 hours ago',
+      title: 'Cập nhật hệ thống',
+      message: 'Bảo trì hệ thống camera đã hoàn thành thành công',
+      timestamp: '6 giờ trước',
       priority: 'low',
       read: true
     }
@@ -90,34 +90,35 @@ const ParentNotifications: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-bold text-gray-900">Notifications & Chat</h1>
-        <p className="text-gray-600 mt-2">Stay connected with teachers and receive important updates</p>
-      </header>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-2xl p-6">
+        <h1 className="text-2xl font-bold mb-2">💬 Thông báo & Tin nhắn</h1>
+        <p className="text-green-100">Kết nối với giáo viên và nhận cập nhật quan trọng</p>
+      </div>
 
       {/* Tab Navigation */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('messages')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'messages'
-                ? 'border-primary-500 text-primary-600'
+            className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${activeTab === 'messages'
+                ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
           >
-            <MessageSquare className="w-4 h-4 inline mr-2" />
-            Messages
+            <MessageSquare className="w-4 h-4" />
+            <span>Tin nhắn</span>
           </button>
           <button
             onClick={() => setActiveTab('notifications')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'notifications'
-                ? 'border-primary-500 text-primary-600'
+            className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${activeTab === 'notifications'
+                ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
           >
-            <Bell className="w-4 h-4 inline mr-2" />
-            Notifications
+            <Bell className="w-4 h-4" />
+            <span>Thông báo</span>
           </button>
         </nav>
       </div>
@@ -127,7 +128,7 @@ const ParentNotifications: React.FC = () => {
           {/* Message List */}
           <section className="lg:col-span-2 space-y-4">
             {messages.map((message) => (
-              <article key={message.id} className={`card cursor-pointer transition-colors hover:bg-gray-50 ${!message.read ? 'border-primary-200 bg-primary-50' : ''
+              <article key={message.id} className={`card cursor-pointer transition-colors hover:bg-gray-50 ${!message.read ? 'border-blue-200 bg-blue-50' : ''
                 }`}>
                 <div className="flex items-start space-x-4">
                   <div className="flex-shrink-0">
@@ -141,7 +142,7 @@ const ParentNotifications: React.FC = () => {
                       <div className="flex items-center space-x-2">
                         <h3 className="text-sm font-medium text-gray-900">{message.from}</h3>
                         {!message.read && (
-                          <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         )}
                       </div>
                       <div className="flex items-center space-x-2 text-xs text-gray-500">
@@ -161,29 +162,29 @@ const ParentNotifications: React.FC = () => {
           {/* Chat/Compose */}
           <aside className="space-y-6">
             <div className="card">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Send Message</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">📝 Gửi tin nhắn</h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">To</label>
-                  <select className="input-field" title="Select message recipient">
-                    <option>Teacher Sarah</option>
-                    <option>School Admin</option>
-                    <option>Principal</option>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Gửi đến</label>
+                  <select className="input-field" title="Chọn người nhận tin nhắn">
+                    <option>Cô Nguyễn Thị Lan</option>
+                    <option>Ban giám hiệu</option>
+                    <option>Hiệu trưởng</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
-                  <input type="text" className="input-field" placeholder="Enter subject" />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tiêu đề</label>
+                  <input type="text" className="input-field" placeholder="Nhập tiêu đề" />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nội dung</label>
                   <textarea
                     className="input-field"
                     rows={4}
-                    placeholder="Type your message here..."
+                    placeholder="Nhập nội dung tin nhắn tại đây..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                   />
@@ -191,41 +192,41 @@ const ParentNotifications: React.FC = () => {
 
                 <button className="w-full btn-primary flex items-center justify-center space-x-2">
                   <Send className="w-4 h-4" />
-                  <span>Send Message</span>
+                  <span>Gửi tin nhắn</span>
                 </button>
               </div>
             </div>
 
             <div className="card">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">⚡ Thao tác nhanh</h3>
 
               <div className="space-y-3">
-                <button className="w-full p-3 bg-primary-50 hover:bg-primary-100 rounded-lg text-left transition-colors">
+                <button className="w-full p-3 bg-blue-50 hover:bg-blue-100 rounded-lg text-left transition-colors">
                   <div className="flex items-center space-x-3">
-                    <Phone className="w-5 h-5 text-primary-600" />
+                    <Phone className="w-5 h-5 text-blue-600" />
                     <div>
-                      <p className="text-sm font-medium text-primary-900">Request Call</p>
-                      <p className="text-xs text-primary-600">Schedule a phone call</p>
+                      <p className="text-sm font-medium text-blue-900">Yêu cầu gọi điện</p>
+                      <p className="text-xs text-blue-600">Lên lịch cuộc gọi</p>
                     </div>
                   </div>
                 </button>
 
-                <button className="w-full p-3 bg-warning-50 hover:bg-warning-100 rounded-lg text-left transition-colors">
+                <button className="w-full p-3 bg-yellow-50 hover:bg-yellow-100 rounded-lg text-left transition-colors">
                   <div className="flex items-center space-x-3">
-                    <AlertTriangle className="w-5 h-5 text-warning-600" />
+                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
                     <div>
-                      <p className="text-sm font-medium text-warning-900">Report Issue</p>
-                      <p className="text-xs text-warning-600">Report a concern or issue</p>
+                      <p className="text-sm font-medium text-yellow-900">Báo cáo vấn đề</p>
+                      <p className="text-xs text-yellow-600">Báo cáo mối quan tâm</p>
                     </div>
                   </div>
                 </button>
 
-                <button className="w-full p-3 bg-success-50 hover:bg-success-100 rounded-lg text-left transition-colors">
+                <button className="w-full p-3 bg-green-50 hover:bg-green-100 rounded-lg text-left transition-colors">
                   <div className="flex items-center space-x-3">
-                    <MessageSquare className="w-5 h-5 text-success-600" />
+                    <MessageSquare className="w-5 h-5 text-green-600" />
                     <div>
-                      <p className="text-sm font-medium text-success-900">Quick Message</p>
-                      <p className="text-xs text-success-600">Send a quick message</p>
+                      <p className="text-sm font-medium text-green-900">Tin nhắn nhanh</p>
+                      <p className="text-xs text-green-600">Gửi tin nhắn nhanh</p>
                     </div>
                   </div>
                 </button>
@@ -238,16 +239,16 @@ const ParentNotifications: React.FC = () => {
       {activeTab === 'notifications' && (
         <div className="space-y-4">
           {notifications.map((notification) => (
-            <article key={notification.id} className={`card cursor-pointer transition-colors hover:bg-gray-50 ${!notification.read ? 'border-primary-200 bg-primary-50' : ''
+            <article key={notification.id} className={`card cursor-pointer transition-colors hover:bg-gray-50 ${!notification.read ? 'border-blue-200 bg-blue-50' : ''
               }`}>
               <div className="flex items-start space-x-4">
                 <div className="flex-shrink-0">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${notification.priority === 'high' ? 'bg-danger-100' :
-                      notification.priority === 'medium' ? 'bg-warning-100' :
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${notification.priority === 'high' ? 'bg-red-100' :
+                      notification.priority === 'medium' ? 'bg-yellow-100' :
                         'bg-gray-100'
                     }`}>
-                    <Bell className={`w-5 h-5 ${notification.priority === 'high' ? 'text-danger-600' :
-                        notification.priority === 'medium' ? 'text-warning-600' :
+                    <Bell className={`w-5 h-5 ${notification.priority === 'high' ? 'text-red-600' :
+                        notification.priority === 'medium' ? 'text-yellow-600' :
                           'text-gray-600'
                       }`} />
                   </div>
@@ -258,7 +259,7 @@ const ParentNotifications: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <h3 className="text-sm font-medium text-gray-900">{notification.title}</h3>
                       {!notification.read && (
-                        <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                       )}
                     </div>
                     <div className="flex items-center space-x-2 text-xs text-gray-500">
@@ -270,8 +271,11 @@ const ParentNotifications: React.FC = () => {
                   <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
 
                   <div className="mt-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(notification.priority)}`}>
-                      {notification.priority} priority
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${notification.priority === 'high' ? 'bg-red-100 text-red-700' :
+                        notification.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
+                      }`}>
+                      Mức độ {notification.priority === 'high' ? 'cao' : notification.priority === 'medium' ? 'trung bình' : 'thấp'}
                     </span>
                   </div>
                 </div>

@@ -1,129 +1,143 @@
 import React, { useState } from 'react'
-import { BarChart3, TrendingUp, Calendar, Download, Activity } from 'lucide-react'
+import { BarChart3, TrendingUp, Calendar, Download, Activity, Target } from 'lucide-react'
 
 const ParentBehaviorReports: React.FC = () => {
   const [timeRange, setTimeRange] = useState('week')
   const [reportType, setReportType] = useState('activity')
 
   const activityData = [
-    { day: 'Mon', active: 85, wandering: 10, climbing: 5 },
-    { day: 'Tue', active: 90, wandering: 8, climbing: 2 },
-    { day: 'Wed', active: 75, wandering: 15, climbing: 10 },
-    { day: 'Thu', active: 88, wandering: 7, climbing: 5 },
-    { day: 'Fri', active: 92, wandering: 5, climbing: 3 },
-    { day: 'Sat', active: 80, wandering: 12, climbing: 8 },
-    { day: 'Sun', active: 85, wandering: 10, climbing: 5 }
+    { day: 'T2', active: 85, wandering: 10, climbing: 5, label: 'Thứ 2' },
+    { day: 'T3', active: 90, wandering: 8, climbing: 2, label: 'Thứ 3' },
+    { day: 'T4', active: 75, wandering: 15, climbing: 10, label: 'Thứ 4' },
+    { day: 'T5', active: 88, wandering: 7, climbing: 5, label: 'Thứ 5' },
+    { day: 'T6', active: 92, wandering: 5, climbing: 3, label: 'Thứ 6' },
+    { day: 'T7', active: 80, wandering: 12, climbing: 8, label: 'Thứ 7' },
+    { day: 'CN', active: 85, wandering: 10, climbing: 5, label: 'Chủ nhật' }
   ]
 
   const behaviorProfile = {
     frequentBehaviors: [
-      { behavior: 'Active Play', percentage: 75, trend: 'up' },
-      { behavior: 'Quiet Activities', percentage: 60, trend: 'stable' },
-      { behavior: 'Social Interaction', percentage: 85, trend: 'up' },
-      { behavior: 'Wandering', percentage: 15, trend: 'down' },
-      { behavior: 'Climbing', percentage: 8, trend: 'down' }
+      { behavior: 'Chơi tích cực', percentage: 75, trend: 'up', description: 'Tham gia các hoạt động vui chơi' },
+      { behavior: 'Hoạt động yên tĩnh', percentage: 60, trend: 'stable', description: 'Đọc sách, vẽ tranh' },
+      { behavior: 'Tương tác xã hội', percentage: 85, trend: 'up', description: 'Chơi cùng bạn bè' },
+      { behavior: 'Lang thang', percentage: 15, trend: 'down', description: 'Di chuyển không mục đích' },
+      { behavior: 'Leo trèo', percentage: 8, trend: 'down', description: 'Leo lên các vật dụng' }
     ],
     riskFactors: [
-      { factor: 'Unsupervised Areas', level: 'Low', color: 'success' },
-      { factor: 'High Activity Periods', level: 'Medium', color: 'warning' },
-      { factor: 'Peer Interactions', level: 'Low', color: 'success' }
+      { factor: 'Khu vực không giám sát', level: 'Thấp', color: 'success' },
+      { factor: 'Thời gian hoạt động cao', level: 'Trung bình', color: 'warning' },
+      { factor: 'Tương tác với bạn bè', level: 'Thấp', color: 'success' }
     ]
   }
 
-  return (
-    <div className="space-y-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Behavior Reports</h1>
-          <p className="text-gray-600 mt-2">Comprehensive analysis of your child's activity patterns</p>
-        </div>
+  const getTrendIcon = (trend: string) => {
+    if (trend === 'up') return '📈'
+    if (trend === 'down') return '📉'
+    return '➡️'
+  }
 
-        <button className="btn-primary flex items-center space-x-2">
-          <Download className="w-4 h-4" />
-          <span>Export Report</span>
-        </button>
-      </header>
+  const getTrendColor = (trend: string) => {
+    if (trend === 'up') return 'text-green-600'
+    if (trend === 'down') return 'text-red-600'
+    return 'text-gray-600'
+  }
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-2xl p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">📊 Báo cáo hành vi</h1>
+            <p className="text-purple-100">Phân tích chi tiết về mô hình hoạt động của con em</p>
+          </div>
+          <button className="bg-white text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center space-x-2">
+            <Download className="w-4 h-4" />
+            <span>Xuất báo cáo</span>
+          </button>
+        </div>
+      </div>
 
       {/* Report Controls */}
-      <section className="card">
+      <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Report Settings</h2>
+          <h3 className="text-lg font-bold text-gray-900">⚙️ Cài đặt báo cáo</h3>
           <Calendar className="w-5 h-5 text-gray-400" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Time Range</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Khoảng thời gian</label>
             <select
               className="input-field"
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              title="Select time range"
+              title="Chọn khoảng thời gian báo cáo"
             >
-              <option value="day">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="quarter">This Quarter</option>
+              <option value="day">Hôm nay</option>
+              <option value="week">Tuần này</option>
+              <option value="month">Tháng này</option>
+              <option value="quarter">Quý này</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Loại báo cáo</label>
             <select
               className="input-field"
               value={reportType}
               onChange={(e) => setReportType(e.target.value)}
-              title="Select report type"
+              title="Chọn loại báo cáo"
             >
-              <option value="activity">Activity Analysis</option>
-              <option value="behavior">Behavior Patterns</option>
-              <option value="safety">Safety Incidents</option>
-              <option value="social">Social Interactions</option>
+              <option value="activity">Phân tích hoạt động</option>
+              <option value="behavior">Mô hình hành vi</option>
+              <option value="safety">Sự cố an toàn</option>
+              <option value="social">Tương tác xã hội</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Comparison</label>
-            <select className="input-field" title="Select comparison type">
-              <option value="none">No Comparison</option>
-              <option value="previous">Previous Period</option>
-              <option value="average">Class Average</option>
-              <option value="baseline">Personal Baseline</option>
+            <label className="block text-sm font-medium text-gray-700 mb-2">So sánh</label>
+            <select className="input-field" title="Chọn phương thức so sánh">
+              <option value="none">Không so sánh</option>
+              <option value="previous">Kỳ trước</option>
+              <option value="average">Trung bình lớp</option>
+              <option value="baseline">Chuẩn cá nhân</option>
             </select>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Activity Chart */}
-      <section className="card">
+      <div className="card">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">Weekly Activity Overview</h2>
-          <BarChart3 className="w-5 h-5 text-primary-500" />
+          <h3 className="text-lg font-bold text-gray-900">📈 Tổng quan hoạt động tuần</h3>
+          <BarChart3 className="w-5 h-5 text-purple-500" />
         </div>
 
         <div className="space-y-4">
           {activityData.map((day) => (
             <div key={day.day} className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">{day.day}</span>
-                <span className="text-sm text-gray-500">Total: {day.active + day.wandering + day.climbing}%</span>
+                <span className="text-sm font-medium text-gray-700">{day.label}</span>
+                <span className="text-sm text-gray-500">Tổng: {day.active + day.wandering + day.climbing}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
                 <div className="h-full flex">
                   <div
-                    className="bg-success-500"
+                    className="bg-gradient-to-r from-green-400 to-green-500"
                     style={{ width: `${day.active}%` }}
-                    title={`Active: ${day.active}%`}
+                    title={`Chơi tích cực: ${day.active}%`}
                   />
                   <div
-                    className="bg-warning-500"
+                    className="bg-gradient-to-r from-yellow-400 to-yellow-500"
                     style={{ width: `${day.wandering}%` }}
-                    title={`Wandering: ${day.wandering}%`}
+                    title={`Lang thang: ${day.wandering}%`}
                   />
                   <div
-                    className="bg-danger-500"
+                    className="bg-gradient-to-r from-red-400 to-red-500"
                     style={{ width: `${day.climbing}%` }}
-                    title={`Climbing: ${day.climbing}%`}
+                    title={`Leo trèo: ${day.climbing}%`}
                   />
                 </div>
               </div>
@@ -131,103 +145,101 @@ const ParentBehaviorReports: React.FC = () => {
           ))}
         </div>
 
-        <div className="mt-6 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-success-500 rounded-full"></div>
-              <span className="text-sm text-gray-600">Active Play</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-warning-500 rounded-full"></div>
-              <span className="text-sm text-gray-600">Wandering</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-danger-500 rounded-full"></div>
-              <span className="text-sm text-gray-600">Climbing</span>
-            </div>
+        <div className="mt-6 flex items-center justify-center space-x-6">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span className="text-sm text-gray-600">Chơi tích cực</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+            <span className="text-sm text-gray-600">Lang thang</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <span className="text-sm text-gray-600">Leo trèo</span>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Behavior Profile */}
-      <section className="card">
+      <div className="card">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">Behavior Profile</h2>
-          <TrendingUp className="w-5 h-5 text-primary-500" />
+          <h3 className="text-lg font-bold text-gray-900">🎯 Hồ sơ hành vi</h3>
+          <Target className="w-5 h-5 text-blue-500" />
         </div>
 
         <div className="space-y-4">
           {behaviorProfile.frequentBehaviors.map((behavior, index) => (
-            <div key={index} className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">{behavior.behavior}</span>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-500">{behavior.percentage}%</span>
-                    <TrendingUp className={`w-4 h-4 ${behavior.trend === 'up' ? 'text-success-500' :
-                      behavior.trend === 'down' ? 'text-danger-500' :
-                        'text-gray-400'
-                      }`} />
-                  </div>
+            <div key={index} className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-3">
+                  <span className="font-medium text-gray-900">{behavior.behavior}</span>
+                  <span className={`text-sm ${getTrendColor(behavior.trend)}`}>
+                    {getTrendIcon(behavior.trend)}
+                  </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-primary-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${behavior.percentage}%` }}
-                  />
-                </div>
+                <span className="text-sm font-medium text-gray-600">{behavior.percentage}%</span>
+              </div>
+              <p className="text-sm text-gray-600 mb-2">{behavior.description}</p>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${behavior.percentage}%` }}
+                />
               </div>
             </div>
           ))}
         </div>
-      </section>
+      </div>
 
-      {/* Risk Assessment */}
-      <section className="card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Risk Assessment</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Risk Assessment */}
+        <div className="card">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">🛡️ Đánh giá rủi ro</h3>
 
-        <div className="space-y-4">
-          {behaviorProfile.riskFactors.map((factor, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-900">{factor.factor}</span>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${factor.level === 'Low' ? 'bg-success-100 text-success-700' :
-                factor.level === 'Medium' ? 'bg-warning-100 text-warning-700' :
-                  'bg-danger-100 text-danger-700'
-                }`}>
-                {factor.level} Risk
-              </span>
+          <div className="space-y-4">
+            {behaviorProfile.riskFactors.map((factor, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-900">{factor.factor}</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${factor.level === 'Thấp' ? 'bg-green-100 text-green-700' :
+                    factor.level === 'Trung bình' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                  }`}>
+                  Rủi ro {factor.level}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* AI Recommendations */}
+        <div className="card">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">🤖 Khuyến nghị từ AI</h3>
+
+          <div className="space-y-3">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <h4 className="font-medium text-blue-900 mb-2">✅ Điểm tích cực</h4>
+              <p className="text-sm text-blue-700">
+                Em có kỹ năng tương tác xã hội tốt. Hãy tiếp tục khuyến khích các hoạt động nhóm và chơi cùng bạn bè.
+              </p>
             </div>
-          ))}
-        </div>
-      </section>
 
-      {/* Recommendations */}
-      <section className="card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">AI Recommendations</h2>
+            <div className="p-4 bg-yellow-50 rounded-lg">
+              <h4 className="font-medium text-yellow-900 mb-2">⚠️ Cần chú ý</h4>
+              <p className="text-sm text-yellow-700">
+                Theo dõi hành vi leo trèo trong giờ chơi. Cân nhắc tăng cường giám sát tại khu vực thiết bị chơi.
+              </p>
+            </div>
 
-        <div className="space-y-3">
-          <div className="p-4 bg-primary-50 rounded-lg">
-            <h3 className="font-medium text-primary-900 mb-2">Positive Reinforcement</h3>
-            <p className="text-sm text-primary-700">
-              Emma shows excellent social interaction skills. Continue encouraging group activities and collaborative play.
-            </p>
-          </div>
-
-          <div className="p-4 bg-warning-50 rounded-lg">
-            <h3 className="font-medium text-warning-900 mb-2">Areas for Attention</h3>
-            <p className="text-sm text-warning-700">
-              Monitor climbing behavior during playground time. Consider additional supervision near equipment areas.
-            </p>
-          </div>
-
-          <div className="p-4 bg-success-50 rounded-lg">
-            <h3 className="font-medium text-success-900 mb-2">Progress Noted</h3>
-            <p className="text-sm text-success-700">
-              Significant improvement in staying within designated areas. Wandering incidents have decreased by 40%.
-            </p>
+            <div className="p-4 bg-green-50 rounded-lg">
+              <h4 className="font-medium text-green-900 mb-2">📈 Tiến bộ đáng chú ý</h4>
+              <p className="text-sm text-green-700">
+                Cải thiện đáng kể trong việc ở trong khu vực được phép. Sự cố lang thang giảm 40%.
+              </p>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
     </div>
   )
 }

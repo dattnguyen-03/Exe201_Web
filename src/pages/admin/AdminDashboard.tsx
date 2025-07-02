@@ -1,258 +1,345 @@
 import React from 'react'
-import { Users, Camera, AlertTriangle, BarChart3, Activity, TrendingUp, Shield } from 'lucide-react'
+import { Users, Camera, AlertTriangle, BarChart3, Activity, TrendingUp, Shield, Clock, CheckCircle } from 'lucide-react'
 
 const AdminDashboard: React.FC = () => {
   const systemStats = {
     totalChildren: 245,
     totalClasses: 12,
     activeCameras: 18,
-    totalAlerts: 47
+    totalAlerts: 47,
+    resolvedAlerts: 42,
+    systemHealth: 96
   }
 
   const recentAlerts = [
     {
       id: 1,
-      child: 'Emma Johnson',
-      class: 'Kindergarten A',
-      type: 'Climbing',
-      severity: 'High',
-      time: '10:30 AM',
-      location: 'Playground'
+      child: 'Nguyễn Minh An',
+      class: 'Lớp Mẫu Giáo A',
+      type: 'Leo trèo',
+      severity: 'Cao',
+      time: '10:30',
+      location: 'Sân chơi',
+      status: 'pending'
     },
     {
       id: 2,
-      child: 'Michael Chen',
-      class: 'Grade 1B',
-      type: 'Out of Zone',
-      severity: 'Medium',
-      time: '9:45 AM',
-      location: 'Hallway'
+      child: 'Trần Thị Bích',
+      class: 'Lớp Mẫu Giáo B',
+      type: 'Ra khỏi vùng an toàn',
+      severity: 'Trung bình',
+      time: '9:45',
+      location: 'Hành lang',
+      status: 'resolved'
     },
     {
       id: 3,
-      child: 'Sofia Rodriguez',
-      class: 'Kindergarten B',
-      type: 'Collision Risk',
-      severity: 'High',
-      time: '9:15 AM',
-      location: 'Cafeteria'
+      child: 'Lê Văn Đức',
+      class: 'Lớp Chồi A',
+      type: 'Nguy cơ va chạm',
+      severity: 'Cao',
+      time: '9:15',
+      location: 'Phòng ăn',
+      status: 'confirmed'
     }
   ]
 
   const alertsByClass = [
-    { class: 'Kindergarten A', alerts: 12, trend: 'up' },
-    { class: 'Kindergarten B', alerts: 8, trend: 'down' },
-    { class: 'Grade 1A', alerts: 15, trend: 'up' },
-    { class: 'Grade 1B', alerts: 6, trend: 'stable' },
-    { class: 'Grade 2A', alerts: 4, trend: 'down' }
+    { class: 'Lớp Mẫu Giáo A', alerts: 12, trend: 'up', students: 22 },
+    { class: 'Lớp Mẫu Giáo B', alerts: 8, trend: 'down', students: 20 },
+    { class: 'Lớp Chồi A', alerts: 15, trend: 'up', students: 25 },
+    { class: 'Lớp Chồi B', alerts: 6, trend: 'stable', students: 23 },
+    { class: 'Lớp Lá A', alerts: 4, trend: 'down', students: 24 }
   ]
 
   const cameraStatus = [
-    { location: 'Classroom A', status: 'Active', health: 98 },
-    { location: 'Playground', status: 'Active', health: 95 },
-    { location: 'Hallway 1', status: 'Maintenance', health: 0 },
-    { location: 'Cafeteria', status: 'Active', health: 92 }
+    { location: 'Phòng học A', status: 'Hoạt động', health: 98, type: 'indoor' },
+    { location: 'Sân chơi', status: 'Hoạt động', health: 95, type: 'outdoor' },
+    { location: 'Hành lang 1', status: 'Bảo trì', health: 0, type: 'indoor' },
+    { location: 'Phòng ăn', status: 'Hoạt động', health: 92, type: 'indoor' }
   ]
 
+  const getTrendIcon = (trend: string) => {
+    if (trend === 'up') return '📈'
+    if (trend === 'down') return '📉'
+    return '➡️'
+  }
+
+  const getTrendColor = (trend: string) => {
+    if (trend === 'up') return 'text-red-600'
+    if (trend === 'down') return 'text-green-600'
+    return 'text-gray-600'
+  }
+
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-2">System-wide overview and monitoring</p>
-      </header>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">🏫 Bảng điều khiển quản trị</h1>
+            <p className="text-indigo-100">Tổng quan và giám sát toàn hệ thống</p>
+          </div>
+          <div className="text-right">
+            <div className="text-3xl font-bold">{systemStats.systemHealth}%</div>
+            <div className="text-indigo-200 text-sm">Sức khỏe hệ thống</div>
+          </div>
+        </div>
+      </div>
 
       {/* System Statistics */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Children</p>
-              <p className="text-3xl font-bold text-gray-900">{systemStats.totalChildren}</p>
+              <p className="text-sm text-blue-700 font-medium">Tổng số trẻ em</p>
+              <p className="text-2xl font-bold text-blue-900">{systemStats.totalChildren}</p>
             </div>
-            <div className="p-3 bg-primary-100 rounded-full">
-              <Users className="w-8 h-8 text-primary-600" />
+            <div className="p-3 bg-blue-500 rounded-full">
+              <Users className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="card">
+        <div className="card bg-gradient-to-br from-green-50 to-green-100 border-green-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Active Classes</p>
-              <p className="text-3xl font-bold text-gray-900">{systemStats.totalClasses}</p>
+              <p className="text-sm text-green-700 font-medium">Lớp học đang hoạt động</p>
+              <p className="text-2xl font-bold text-green-900">{systemStats.totalClasses}</p>
             </div>
-            <div className="p-3 bg-success-100 rounded-full">
-              <BarChart3 className="w-8 h-8 text-success-600" />
+            <div className="p-3 bg-green-500 rounded-full">
+              <BarChart3 className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="card">
+        <div className="card bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Active Cameras</p>
-              <p className="text-3xl font-bold text-gray-900">{systemStats.activeCameras}</p>
+              <p className="text-sm text-yellow-700 font-medium">Camera hoạt động</p>
+              <p className="text-2xl font-bold text-yellow-900">{systemStats.activeCameras}</p>
             </div>
-            <div className="p-3 bg-warning-100 rounded-full">
-              <Camera className="w-8 h-8 text-warning-600" />
+            <div className="p-3 bg-yellow-500 rounded-full">
+              <Camera className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="card">
+        <div className="card bg-gradient-to-br from-red-50 to-red-100 border-red-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Today's Alerts</p>
-              <p className="text-3xl font-bold text-gray-900">{systemStats.totalAlerts}</p>
+              <p className="text-sm text-red-700 font-medium">Cảnh báo hôm nay</p>
+              <p className="text-2xl font-bold text-red-900">{systemStats.totalAlerts}</p>
             </div>
-            <div className="p-3 bg-danger-100 rounded-full">
-              <AlertTriangle className="w-8 h-8 text-danger-600" />
+            <div className="p-3 bg-red-500 rounded-full">
+              <AlertTriangle className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Alerts */}
-        <section className="card">
+        {/* Recent System Alerts */}
+        <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Recent System Alerts</h2>
-            <AlertTriangle className="w-5 h-5 text-warning-500" />
+            <h3 className="text-lg font-bold text-gray-900">🚨 Cảnh báo gần đây</h3>
+            <AlertTriangle className="w-5 h-5 text-orange-500" />
           </div>
-          
+
           <div className="space-y-3">
             {recentAlerts.map((alert) => (
-              <div key={alert.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium text-gray-900">{alert.child}</span>
-                    <span className="text-sm text-gray-500">({alert.class})</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      alert.severity === 'High' ? 'bg-danger-100 text-danger-700' :
-                      alert.severity === 'Medium' ? 'bg-warning-100 text-warning-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
-                      {alert.severity}
-                    </span>
+              <div key={alert.id} className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="font-medium text-gray-900">{alert.child}</span>
+                      <span className="text-sm text-gray-500">({alert.class})</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${alert.severity === 'Cao' ? 'bg-red-100 text-red-700' :
+                        alert.severity === 'Trung bình' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                        {alert.severity}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-1">{alert.type} • {alert.location} • {alert.time}</p>
                   </div>
-                  <p className="text-sm text-gray-500">{alert.type} • {alert.location} • {alert.time}</p>
+                  <div className={`ml-3 px-2 py-1 rounded-full text-xs font-medium ${alert.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                    alert.status === 'confirmed' ? 'bg-blue-100 text-blue-700' :
+                      'bg-orange-100 text-orange-700'
+                    }`}>
+                    {alert.status === 'resolved' ? 'Đã xử lý' :
+                      alert.status === 'confirmed' ? 'Đã xác nhận' : 'Chờ xử lý'}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-          
-          <button className="w-full mt-4 btn-secondary">View All Alerts</button>
-        </section>
+
+          <button className="w-full mt-4 btn-secondary">
+            Xem tất cả cảnh báo
+          </button>
+        </div>
 
         {/* Alert Statistics by Class */}
-        <section className="card">
+        <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Alerts by Class</h2>
-            <BarChart3 className="w-5 h-5 text-primary-500" />
+            <h3 className="text-lg font-bold text-gray-900">📊 Cảnh báo theo lớp</h3>
+            <BarChart3 className="w-5 h-5 text-blue-500" />
           </div>
-          
+
           <div className="space-y-3">
             {alertsByClass.map((item, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
+              <div key={index} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium text-gray-700">{item.class}</span>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-500">{item.alerts} alerts</span>
-                      <TrendingUp className={`w-4 h-4 ${
-                        item.trend === 'up' ? 'text-danger-500' :
-                        item.trend === 'down' ? 'text-success-500' :
-                        'text-gray-400'
-                      }`} />
-                    </div>
+                    <span className={`text-xs ${getTrendColor(item.trend)}`}>
+                      {getTrendIcon(item.trend)}
+                    </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-primary-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(item.alerts / 20) * 100}%` }}
-                    />
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-500">{item.alerts} cảnh báo</span>
+                    <span className="text-xs text-gray-400">({item.students} học sinh)</span>
                   </div>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(item.alerts / 20) * 100}%` }}
+                  />
                 </div>
               </div>
             ))}
           </div>
-        </section>
+        </div>
       </div>
 
       {/* Camera and AI System Health */}
-      <section className="card">
+      <div className="card">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Camera & AI System Health</h2>
-          <Shield className="w-5 h-5 text-primary-500" />
+          <h3 className="text-lg font-bold text-gray-900">📹 Tình trạng camera & hệ thống AI</h3>
+          <Shield className="w-5 h-5 text-blue-500" />
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {cameraStatus.map((camera, index) => (
             <div key={index} className="p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-medium text-gray-900">{camera.location}</h4>
+                <div className="flex items-center space-x-1">
+                  {camera.type === 'outdoor' && <span className="text-xs">🌤️</span>}
+                  {camera.type === 'indoor' && <span className="text-xs">🏠</span>}
+                </div>
+              </div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium text-gray-900">{camera.location}</h3>
-                <span className={camera.status === 'Active' ? 'status-active' : 'status-inactive'}>
+                <span className={`text-xs font-medium px-2 py-1 rounded-full ${camera.status === 'Hoạt động' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                  }`}>
                   {camera.status}
                 </span>
+                <span className="text-sm font-medium">{camera.health}%</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="flex-1 bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full ${
-                      camera.health > 90 ? 'bg-success-500' :
-                      camera.health > 70 ? 'bg-warning-500' :
-                      'bg-danger-500'
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full ${camera.health > 90 ? 'bg-green-500' :
+                    camera.health > 70 ? 'bg-yellow-500' :
+                      'bg-red-500'
                     }`}
-                    style={{ width: `${camera.health}%` }}
-                  />
-                </div>
-                <span className="text-sm text-gray-500">{camera.health}%</span>
+                  style={{ width: `${camera.health}%` }}
+                />
               </div>
             </div>
           ))}
         </div>
-        
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
           <div className="text-center">
-            <div className="text-2xl font-bold text-success-600">94%</div>
-            <div className="text-sm text-gray-500">Overall System Health</div>
+            <div className="text-2xl font-bold text-blue-600">94%</div>
+            <div className="text-sm text-blue-700">Sức khỏe tổng thể</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-primary-600">18/20</div>
-            <div className="text-sm text-gray-500">Cameras Online</div>
+            <div className="text-2xl font-bold text-green-600">18/20</div>
+            <div className="text-sm text-green-700">Camera trực tuyến</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-warning-600">2</div>
-            <div className="text-sm text-gray-500">Maintenance Required</div>
+            <div className="text-2xl font-bold text-orange-600">2</div>
+            <div className="text-sm text-orange-700">Cần bảo trì</div>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Quick Actions */}
-      <section className="card">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+      <div className="card">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">⚡ Thao tác nhanh</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button className="p-4 bg-primary-50 hover:bg-primary-100 rounded-lg text-center transition-colors">
-            <Users className="w-6 h-6 text-primary-600 mx-auto mb-2" />
-            <span className="text-sm font-medium text-primary-700">Manage Classes</span>
+          <button className="p-4 bg-blue-50 hover:bg-blue-100 rounded-xl text-center transition-colors group">
+            <Users className="w-8 h-8 text-blue-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-medium text-blue-700">Quản lý lớp học</span>
           </button>
-          
-          <button className="p-4 bg-warning-50 hover:bg-warning-100 rounded-lg text-center transition-colors">
-            <AlertTriangle className="w-6 h-6 text-warning-600 mx-auto mb-2" />
-            <span className="text-sm font-medium text-warning-700">View Alerts</span>
+
+          <button className="p-4 bg-orange-50 hover:bg-orange-100 rounded-xl text-center transition-colors group">
+            <AlertTriangle className="w-8 h-8 text-orange-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-medium text-orange-700">Xem cảnh báo</span>
           </button>
-          
-          <button className="p-4 bg-success-50 hover:bg-success-100 rounded-lg text-center transition-colors">
-            <BarChart3 className="w-6 h-6 text-success-600 mx-auto mb-2" />
-            <span className="text-sm font-medium text-success-700">Generate Report</span>
+
+          <button className="p-4 bg-green-50 hover:bg-green-100 rounded-xl text-center transition-colors group">
+            <BarChart3 className="w-8 h-8 text-green-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-medium text-green-700">Tạo báo cáo</span>
           </button>
-          
-          <button className="p-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-center transition-colors">
-            <Camera className="w-6 h-6 text-gray-600 mx-auto mb-2" />
-            <span className="text-sm font-medium text-gray-700">Camera Playback</span>
+
+          <button className="p-4 bg-purple-50 hover:bg-purple-100 rounded-xl text-center transition-colors group">
+            <Camera className="w-8 h-8 text-purple-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-medium text-purple-700">Xem lại camera</span>
           </button>
         </div>
-      </section>
+      </div>
+
+      {/* Performance Summary */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+          <div className="flex items-center space-x-3 mb-3">
+            <CheckCircle className="w-8 h-8 text-green-600" />
+            <div>
+              <h4 className="font-bold text-green-900">Hiệu suất xuất sắc</h4>
+              <p className="text-sm text-green-700">Hệ thống hoạt động ổn định</p>
+            </div>
+          </div>
+          <div className="space-y-2 text-sm text-green-700">
+            <div>• 99.2% thời gian hoạt động</div>
+            <div>• {systemStats.resolvedAlerts}/{systemStats.totalAlerts} cảnh báo đã xử lý</div>
+            <div>• 0 sự cố nghiêm trọng</div>
+          </div>
+        </div>
+
+        <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <div className="flex items-center space-x-3 mb-3">
+            <Activity className="w-8 h-8 text-blue-600" />
+            <div>
+              <h4 className="font-bold text-blue-900">Hoạt động hôm nay</h4>
+              <p className="text-sm text-blue-700">Tóm tắt các sự kiện</p>
+            </div>
+          </div>
+          <div className="space-y-2 text-sm text-blue-700">
+            <div>• {systemStats.totalAlerts} cảnh báo mới</div>
+            <div>• 156 sự kiện được ghi nhận</div>
+            <div>• 23 tương tác phụ huynh</div>
+          </div>
+        </div>
+
+        <div className="card bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <div className="flex items-center space-x-3 mb-3">
+            <TrendingUp className="w-8 h-8 text-purple-600" />
+            <div>
+              <h4 className="font-bold text-purple-900">Xu hướng tuần này</h4>
+              <p className="text-sm text-purple-700">So với tuần trước</p>
+            </div>
+          </div>
+          <div className="space-y-2 text-sm text-purple-700">
+            <div>• 📈 Cảnh báo tăng 12%</div>
+            <div>• 📉 Thời gian phản hồi giảm 8%</div>
+            <div>• 📈 Độ chính xác AI tăng 2%</div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
