@@ -27,9 +27,10 @@ const AdminLiveView: React.FC = () => {
     useEffect(() => {
         if (running) {
             startCamera();
+            // Giảm interval time xuống 100ms để cập nhật thường xuyên hơn
             const interval = setInterval(() => {
                 captureAndDetect();
-            }, 2000);
+            }, 100);
             return () => clearInterval(interval);
         } else {
             stopCamera();
@@ -38,7 +39,13 @@ const AdminLiveView: React.FC = () => {
 
     const startCamera = async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    frameRate: { ideal: 30 }  // Tăng frame rate
+                } 
+            });
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
             }
@@ -77,16 +84,20 @@ const AdminLiveView: React.FC = () => {
 
         const video = videoRef.current;
         const canvas = canvasRef.current;
-        const ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext("2d", { alpha: false }); // Tối ưu performance với alpha: false
         if (!ctx) return;
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        // Chỉ cập nhật kích thước canvas một lần khi video thay đổi
+        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+        }
+
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         try {
             const blob = await new Promise<Blob>((resolve) => 
-                canvas.toBlob(resolve as BlobCallback, 'image/jpeg')
+                canvas.toBlob(resolve as BlobCallback, 'image/jpeg', 0.8) // Giảm chất lượng xuống 0.8 để tăng tốc độ
             );
 
             const formData = new FormData();
