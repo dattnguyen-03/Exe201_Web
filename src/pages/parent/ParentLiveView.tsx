@@ -31,6 +31,8 @@ const ParentLiveView: React.FC = () => {
         captureAndDetect();
       }, 2000); // gửi frame mỗi 2 giây
       return () => clearInterval(interval);
+    } else {
+      stopCamera();
     }
   }, [running]);
 
@@ -45,7 +47,16 @@ const ParentLiveView: React.FC = () => {
     }
   };
   
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  };
+
   const drawDetections = (ctx: CanvasRenderingContext2D, detections: Detection[]) => {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // Clear previous drawings
   ctx.lineWidth = 2;
   detections.forEach((det) => {
     const [x1, y1, x2, y2] = det.box;
@@ -57,42 +68,58 @@ const ParentLiveView: React.FC = () => {
     ctx.fillText(
       `${det.class} (${(det.confidence * 100).toFixed(1)}%)`,
       x1 + 4,
-      y1 - 4
+      y1 > 20 ? y1 - 4 : y1 + 20 
     );
   });
 };
 
   const captureAndDetect = async () => {
-  if (!videoRef.current || !canvasRef.current) return;
+  if (!videoRef.current || !canvasRef.current || videoRef.current.paused || videoRef.current.ended) return;
 
   const video = videoRef.current;
   const canvas = canvasRef.current;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  let blob: Blob | null = null;
 
-  canvas.toBlob(async (blob) => {
+  try {
+    if (window.ImageCapture) {
+      const mediaStreamTrack = (video.srcObject as MediaStream).getVideoTracks()[0];
+      const imageCapture = new ImageCapture(mediaStreamTrack);
+      blob = await imageCapture.takePhoto();
+    } else {
+      // Fallback for browsers that don't support ImageCapture
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = video.videoWidth;
+      tempCanvas.height = video.videoHeight;
+      const tempCtx = tempCanvas.getContext('2d');
+      if (tempCtx) {
+        tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+        blob = await new Promise(resolve => tempCanvas.toBlob(resolve, 'image/jpeg'));
+      }
+    }
+
     if (!blob) return;
+
     const formData = new FormData();
     formData.append("file", blob, "frame.jpg");
 
-    try {
-      const response = await fetch("http://127.0.0.1:8000/detect", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json();
-      setDetections(data.detections || []);
+    const response = await fetch("http://127.0.0.1:8000/detect", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await response.json();
+    const newDetections = data.detections || [];
+    setDetections(newDetections);
 
-      // Vẽ bounding box trực tiếp trên canvas
-      drawDetections(ctx, data.detections || []);
-    } catch (err) {
-      console.error("Error calling API:", err);
-    }
-  }, "image/jpeg");
+    // We need to set canvas dimensions for drawing
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    drawDetections(ctx, newDetections);
+  } catch (err) {
+    console.error("Error capturing or detecting frame:", err);
+  }
 };
 
   return (
@@ -158,8 +185,8 @@ const ParentLiveView: React.FC = () => {
             </div>
 
             <div className="relative bg-black rounded-xl overflow-hidden shadow-lg" style={{ aspectRatio: "16/9" }}>
-              <video ref={videoRef} autoPlay muted className="w-full h-full object-cover" />
-              <canvas ref={canvasRef} style={{ display: "none" }} />
+              <video ref={videoRef} autoPlay muted className="w-full h-full object-cover" onPlay={captureAndDetect} />
+              <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
 
               {/* Hiển thị kết quả detect */}
               {detections.length > 0 && (

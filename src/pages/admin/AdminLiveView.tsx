@@ -1,10 +1,21 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Camera, Maximize, Volume2, VolumeX, Users, User, Grid, Eye, Wifi, WifiOff, TrendingUp } from 'lucide-react'
+
+interface Detection {
+    class: string;
+    confidence: number;
+    box: number[];
+}
 
 const AdminLiveView: React.FC = () => {
     const [viewMode, setViewMode] = useState<'single' | 'full'>('single')
     const [selectedCamera, setSelectedCamera] = useState('classroom-a')
     const [audioEnabled, setAudioEnabled] = useState(false)
+    const [running, setRunning] = useState(false);
+    const [detections, setDetections] = useState<Detection[]>([]);
+
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     const cameras = [
         { id: 'classroom-a', name: 'Phòng học A', status: 'Hoạt động', location: 'Tầng 1', students: 22 },
@@ -12,6 +23,86 @@ const AdminLiveView: React.FC = () => {
         { id: 'hallway', name: 'Hành lang chính', status: 'Bảo trì', location: 'Tầng 1', students: 0 },
         { id: 'cafeteria', name: 'Phòng ăn tập thể', status: 'Hoạt động', location: 'Tầng 1', students: 38 }
     ]
+
+    useEffect(() => {
+        if (running) {
+            startCamera();
+            const interval = setInterval(() => {
+                captureAndDetect();
+            }, 2000);
+            return () => clearInterval(interval);
+        } else {
+            stopCamera();
+        }
+    }, [running]);
+
+    const startCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
+        } catch (err) {
+            console.error("Không thể bật camera:", err);
+        }
+    };
+
+    const stopCamera = () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+            const stream = videoRef.current.srcObject as MediaStream;
+            stream.getTracks().forEach(track => track.stop());
+            videoRef.current.srcObject = null;
+        }
+    };
+
+    const drawDetections = (ctx: CanvasRenderingContext2D, detections: Detection[]) => {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.lineWidth = 2;
+        detections.forEach((det) => {
+            const [x1, y1, x2, y2] = det.box;
+            ctx.strokeStyle = det.class.toLowerCase() === "violence" ? "red" : "green";
+            ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+            ctx.fillStyle = ctx.strokeStyle;
+            ctx.font = "16px Arial";
+            ctx.fillText(
+                `${det.class} (${(det.confidence * 100).toFixed(1)}%)`,
+                x1 + 4,
+                y1 > 20 ? y1 - 4 : y1 + 20
+            );
+        });
+    };
+
+    const captureAndDetect = async () => {
+        if (!videoRef.current || !canvasRef.current || videoRef.current.paused || videoRef.current.ended) return;
+
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        try {
+            const blob = await new Promise<Blob>((resolve) => 
+                canvas.toBlob(resolve as BlobCallback, 'image/jpeg')
+            );
+
+            const formData = new FormData();
+            formData.append("file", blob, "frame.jpg");
+
+            const response = await fetch("http://127.0.0.1:8000/detect", {
+                method: "POST",
+                body: formData,
+            });
+            const data = await response.json();
+            setDetections(data.detections || []);
+            drawDetections(ctx, data.detections || []);
+        } catch (err) {
+            console.error("Error detecting:", err);
+        }
+    };
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -140,18 +231,39 @@ const AdminLiveView: React.FC = () => {
                                 >
                                     <Maximize className="w-5 h-5 text-gray-600" />
                                 </button>
+
+                                <button
+                                    onClick={() => setRunning(!running)}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${running ? 'bg-red-500 text-white' : 'bg-blue-600 text-white'
+                                        }`}
+                                >
+                                    {running ? "Dừng" : "Bắt đầu"}
+                                </button>
                             </div>
                         </div>
 
                         {/* Video Container */}
                         <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl overflow-hidden shadow-lg" style={{ aspectRatio: '16/9' }}>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="text-center text-white">
-                                    <Camera className="w-20 h-20 mx-auto mb-4 opacity-50" />
-                                    <p className="text-xl font-medium">Video trực tiếp - Quản trị viên</p>
-                                    <p className="text-sm opacity-75">Camera: {cameras.find(c => c.id === selectedCamera)?.name}</p>
+                            <video 
+                                ref={videoRef} 
+                                autoPlay 
+                                playsInline
+                                muted 
+                                className="w-full h-full object-cover"
+                            />
+                            <canvas 
+                                ref={canvasRef} 
+                                className="absolute top-0 left-0 w-full h-full"
+                            />
+                            {!running && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="text-center text-white">
+                                        <Camera className="w-20 h-20 mx-auto mb-4 opacity-50" />
+                                        <p className="text-xl font-medium">Video trực tiếp - Quản trị viên</p>
+                                        <p className="text-sm opacity-75">Camera: {cameras.find(c => c.id === selectedCamera)?.name}</p>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* AI Overlay Indicators */}
                             <div className="absolute top-4 left-4 space-y-2">
