@@ -1,9 +1,35 @@
 import React, { useState } from 'react'
-import { Users, Plus, Edit, Trash2, Search, Filter, User, Camera } from 'lucide-react'
+import { Users, Plus, Edit, Trash2, Search, Filter, User, Camera, X } from 'lucide-react'
 
 const AdminClassManagement: React.FC = () => {
   const [selectedClass, setSelectedClass] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  
+  // Modal states
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false)
+  const [showAddClassModal, setShowAddClassModal] = useState(false)
+  
+  // Form states
+  const [newStudent, setNewStudent] = useState({
+    name: '',
+    age: '',
+    birthDate: '',
+    parentName: '',
+    parentPhone: '',
+    parentEmail: '',
+    class: '',
+    address: '',
+    emergencyContact: ''
+  })
+  
+  const [newClass, setNewClass] = useState({
+    name: '',
+    teacher: '',
+    ageRange: '',
+    room: '',
+    capacity: '',
+    description: ''
+  })
 
   const classes = [
     {
@@ -80,6 +106,40 @@ const AdminClassManagement: React.FC = () => {
     ? students.filter(student => student.class === selectedClass)
     : students
 
+  // Handle form submissions
+  const handleAddStudent = (e: React.FormEvent) => {
+    e.preventDefault()
+    console.log('Adding student:', newStudent)
+    setShowAddStudentModal(false)
+    setNewStudent({
+      name: '',
+      age: '',
+      birthDate: '',
+      parentName: '',
+      parentPhone: '',
+      parentEmail: '',
+      class: '',
+      address: '',
+      emergencyContact: ''
+    })
+    alert('Học sinh đã được thêm thành công!')
+  }
+
+  const handleAddClass = (e: React.FormEvent) => {
+    e.preventDefault()
+    console.log('Adding class:', newClass)
+    setShowAddClassModal(false)
+    setNewClass({
+      name: '',
+      teacher: '',
+      ageRange: '',
+      room: '',
+      capacity: '',
+      description: ''
+    })
+    alert('Lớp học đã được tạo thành công!')
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <header className="flex items-center justify-between">
@@ -88,7 +148,10 @@ const AdminClassManagement: React.FC = () => {
           <p className="text-gray-600 mt-2">Quản lý lớp, học sinh và hồ sơ cá nhân</p>
         </div>
 
-        <button className="btn-primary flex items-center space-x-2">
+        <button 
+          className="btn-primary flex items-center space-x-2"
+          onClick={() => setShowAddStudentModal(true)}
+        >
           <Plus className="w-4 h-4" />
           <span>Thêm học sinh mới</span>
         </button>
@@ -134,7 +197,10 @@ const AdminClassManagement: React.FC = () => {
               ))}
             </div>
 
-            <button className="w-full mt-4 btn-secondary flex items-center justify-center space-x-2">
+            <button 
+              className="w-full mt-4 btn-secondary flex items-center justify-center space-x-2"
+              onClick={() => setShowAddClassModal(true)}
+            >
               <Plus className="w-4 h-4" />
               <span>Thêm lớp học</span>
             </button>
@@ -290,6 +356,292 @@ const AdminClassManagement: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Modal thêm học sinh */}
+      {showAddStudentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Thêm học sinh mới</h2>
+              <button
+                onClick={() => setShowAddStudentModal(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddStudent} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Họ và tên học sinh *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="input-field"
+                    value={newStudent.name}
+                    onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                    placeholder="Nhập họ và tên học sinh"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tuổi *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="3"
+                    max="7"
+                    className="input-field"
+                    value={newStudent.age}
+                    onChange={(e) => setNewStudent({ ...newStudent, age: e.target.value })}
+                    placeholder="Nhập tuổi"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ngày sinh *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    className="input-field"
+                    value={newStudent.birthDate}
+                    onChange={(e) => setNewStudent({ ...newStudent, birthDate: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Lớp học *
+                  </label>
+                  <select
+                    required
+                    className="input-field"
+                    value={newStudent.class}
+                    onChange={(e) => setNewStudent({ ...newStudent, class: e.target.value })}
+                  >
+                    <option value="">Chọn lớp học</option>
+                    {classes.map((classItem) => (
+                      <option key={classItem.id} value={classItem.id}>
+                        {classItem.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Họ tên phụ huynh *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="input-field"
+                    value={newStudent.parentName}
+                    onChange={(e) => setNewStudent({ ...newStudent, parentName: e.target.value })}
+                    placeholder="Nhập họ tên phụ huynh"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Số điện thoại phụ huynh *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    className="input-field"
+                    value={newStudent.parentPhone}
+                    onChange={(e) => setNewStudent({ ...newStudent, parentPhone: e.target.value })}
+                    placeholder="0901 234 567"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email phụ huynh
+                  </label>
+                  <input
+                    type="email"
+                    className="input-field"
+                    value={newStudent.parentEmail}
+                    onChange={(e) => setNewStudent({ ...newStudent, parentEmail: e.target.value })}
+                    placeholder="email@example.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Liên hệ khẩn cấp
+                  </label>
+                  <input
+                    type="tel"
+                    className="input-field"
+                    value={newStudent.emergencyContact}
+                    onChange={(e) => setNewStudent({ ...newStudent, emergencyContact: e.target.value })}
+                    placeholder="0901 234 567"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Địa chỉ
+                </label>
+                <textarea
+                  className="input-field"
+                  rows={3}
+                  value={newStudent.address}
+                  onChange={(e) => setNewStudent({ ...newStudent, address: e.target.value })}
+                  placeholder="Nhập địa chỉ nhà"
+                />
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddStudentModal(false)}
+                  className="btn-secondary"
+                >
+                  Hủy
+                </button>
+                <button type="submit" className="btn-primary">
+                  Thêm học sinh
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal thêm lớp học */}
+      {showAddClassModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Tạo lớp học mới</h2>
+              <button
+                onClick={() => setShowAddClassModal(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddClass} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tên lớp học *
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="input-field"
+                  value={newClass.name}
+                  onChange={(e) => setNewClass({ ...newClass, name: e.target.value })}
+                  placeholder="Ví dụ: Lớp Mẫu Giáo C"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Giáo viên chủ nhiệm *
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="input-field"
+                  value={newClass.teacher}
+                  onChange={(e) => setNewClass({ ...newClass, teacher: e.target.value })}
+                  placeholder="Nhập họ tên giáo viên"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Độ tuổi *
+                  </label>
+                  <select
+                    required
+                    className="input-field"
+                    value={newClass.ageRange}
+                    onChange={(e) => setNewClass({ ...newClass, ageRange: e.target.value })}
+                  >
+                    <option value="">Chọn độ tuổi</option>
+                    <option value="3-4 tuổi">3-4 tuổi</option>
+                    <option value="4-5 tuổi">4-5 tuổi</option>
+                    <option value="5-6 tuổi">5-6 tuổi</option>
+                    <option value="6-7 tuổi">6-7 tuổi</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phòng học *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="input-field"
+                    value={newClass.room}
+                    onChange={(e) => setNewClass({ ...newClass, room: e.target.value })}
+                    placeholder="Ví dụ: Phòng 103"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sĩ số tối đa *
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="15"
+                  max="30"
+                  className="input-field"
+                  value={newClass.capacity}
+                  onChange={(e) => setNewClass({ ...newClass, capacity: e.target.value })}
+                  placeholder="Ví dụ: 25"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mô tả
+                </label>
+                <textarea
+                  className="input-field"
+                  rows={3}
+                  value={newClass.description}
+                  onChange={(e) => setNewClass({ ...newClass, description: e.target.value })}
+                  placeholder="Mô tả về lớp học (tùy chọn)"
+                />
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddClassModal(false)}
+                  className="btn-secondary"
+                >
+                  Hủy
+                </button>
+                <button type="submit" className="btn-primary">
+                  Tạo lớp học
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

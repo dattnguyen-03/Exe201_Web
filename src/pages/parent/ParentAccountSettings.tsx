@@ -23,9 +23,9 @@ const ParentAccountSettings: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-2xl p-6">
+      <div className="bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-2xl p-6">
         <h1 className="text-2xl font-bold mb-2">⚙️ Cài đặt tài khoản</h1>
-        <p className="text-purple-100">Quản lý tùy chọn tài khoản và cài đặt thông báo</p>
+        <p className="text-amber-100">Quản lý tùy chọn tài khoản và cài đặt thông báo</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -33,21 +33,31 @@ const ParentAccountSettings: React.FC = () => {
         <section className="lg:col-span-2 space-y-6">
           <div className="card">
             <div className="flex items-center space-x-3 mb-6">
-              <User className="w-6 h-6 text-blue-600" />
+              <User className="w-6 h-6 text-amber-600" />
               <h2 className="text-xl font-semibold text-gray-900">Thông tin cá nhân</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Họ và tên</label>
-                <input type="text" className="input-field" defaultValue="Nguyễn Văn Minh" title="Nhập họ và tên đầy đủ" />
+                <label className="block text-base font-medium text-gray-800 mb-3">Họ và tên</label>
+                <input 
+                  type="text" 
+                  className="w-full px-5 py-4 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200 bg-white/80 backdrop-blur-sm text-gray-900 text-base" 
+                  defaultValue="Nguyễn Văn Minh" 
+                  title="Nhập họ và tên đầy đủ" 
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Địa chỉ Email</label>
-                <input type="email" className="input-field" defaultValue="minh.nguyen@example.com" title="Nhập địa chỉ email" />
+                <label className="block text-base font-medium text-gray-800 mb-3">Địa chỉ Email</label>
+                <input 
+                  type="email" 
+                  className="w-full px-5 py-4 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200 bg-white/80 backdrop-blur-sm text-gray-900 text-base" 
+                  defaultValue="minh.nguyen@example.com" 
+                  title="Nhập địa chỉ email" 
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Số điện thoại</label>
+                <label className="block text-base font-medium text-gray-800 mb-3">Số điện thoại</label>
                 <input type="tel" className="input-field" defaultValue="0901 234 567" title="Nhập số điện thoại" />
               </div>
               <div>

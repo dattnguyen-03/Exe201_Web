@@ -74,34 +74,34 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl p-6">
+      <div className="bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-2xl p-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold mb-2">🏫 Bảng điều khiển quản trị</h1>
-            <p className="text-indigo-100">Tổng quan và giám sát toàn hệ thống</p>
+            <p className="text-amber-100">Tổng quan và giám sát toàn hệ thống</p>
           </div>
           <div className="text-right">
             <div className="text-3xl font-bold">{systemStats.systemHealth}%</div>
-            <div className="text-indigo-200 text-sm">Sức khỏe hệ thống</div>
+            <div className="text-amber-200 text-sm">Sức khỏe hệ thống</div>
           </div>
         </div>
       </div>
 
       {/* System Statistics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <div className="card bg-gradient-to-br from-amber-25 to-amber-50 border-amber-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-700 font-medium">Tổng số trẻ em</p>
-              <p className="text-2xl font-bold text-blue-900">{systemStats.totalChildren}</p>
+              <p className="text-sm text-amber-700 font-medium">Tổng số trẻ em</p>
+              <p className="text-2xl font-bold text-amber-900">{systemStats.totalChildren}</p>
             </div>
-            <div className="p-3 bg-blue-500 rounded-full">
+            <div className="p-3 bg-amber-500 rounded-full">
               <Users className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="card bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+        <div className="card bg-gradient-to-br from-green-25 to-green-50 border-green-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-green-700 font-medium">Lớp học đang hoạt động</p>
@@ -113,7 +113,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="card bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
+        <div className="card bg-gradient-to-br from-yellow-25 to-yellow-50 border-yellow-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-yellow-700 font-medium">Camera hoạt động</p>
@@ -125,13 +125,13 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="card bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+        <div className="card bg-gradient-to-br from-orange-25 to-orange-50 border-orange-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-red-700 font-medium">Cảnh báo hôm nay</p>
-              <p className="text-2xl font-bold text-red-900">{systemStats.totalAlerts}</p>
+              <p className="text-sm text-orange-700 font-medium">Cảnh báo hôm nay</p>
+              <p className="text-2xl font-bold text-orange-900">{systemStats.totalAlerts}</p>
             </div>
-            <div className="p-3 bg-red-500 rounded-full">
+            <div className="p-3 bg-orange-500 rounded-full">
               <AlertTriangle className="w-6 h-6 text-white" />
             </div>
           </div>

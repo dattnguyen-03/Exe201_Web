@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import Layout from './Layout'
 
 interface ProtectedRouteProps {
-  role: 'parent' | 'admin'
+  role: 'parent' | 'admin' | 'teacher'
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ role }) => {

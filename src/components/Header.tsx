@@ -6,19 +6,19 @@ const Header: React.FC = () => {
   const { user, logout } = useAuth()
 
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm">
+    <header className="bg-white/80 backdrop-blur-xl border-b border-amber-200/50 shadow-sm">
       <div className="flex items-center justify-between px-6 py-4">
         {/* Logo and Title */}
         <div className="flex items-center space-x-3">
-          <div className="h-10 w-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">HT</span>
+          <div className="h-10 w-10 bg-gradient-to-r from-amber-600 to-orange-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg">SC</span>
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">
-              Hệ Thống Giám Sát Trẻ Em
+              Smart Child Monitoring
             </h1>
-            <p className="text-xs text-gray-500">
-              {user?.role === 'parent' ? 'Cổng Phụ Huynh' : 'Cổng Quản Trị'}
+            <p className="text-xs text-gray-600">
+              {user?.role === 'parent' ? 'Cổng Phụ Huynh' : user?.role === 'teacher' ? 'Cổng Giáo Viên' : 'Cổng Quản Trị'}
             </p>
           </div>
         </div>
@@ -27,7 +27,7 @@ const Header: React.FC = () => {
         <div className="flex items-center space-x-3">
           {/* Notifications */}
           <button
-            className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-amber-50 rounded-lg transition-colors"
             title="Thông báo"
           >
             <Bell className="w-5 h-5" />
@@ -37,16 +37,16 @@ const Header: React.FC = () => {
           </button>
 
           {/* User Menu */}
-          <div className="flex items-center space-x-3 bg-gray-50 rounded-lg px-3 py-2">
+          <div className="flex items-center space-x-3 bg-amber-50/50 rounded-lg px-3 py-2">
             <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center">
+              <div className="h-8 w-8 bg-gradient-to-r from-amber-600 to-orange-600 rounded-full flex items-center justify-center">
                 <User className="w-4 h-4 text-white" />
               </div>
               <div className="hidden sm:block">
                 <div className="text-sm font-medium text-gray-900">
                   {user?.name}
                 </div>
-                <div className="text-xs text-gray-500 capitalize">
+                <div className="text-xs text-gray-600 capitalize">
                   {user?.role}
                 </div>
               </div>
