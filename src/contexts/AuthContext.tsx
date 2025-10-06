@@ -1,18 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-
-interface User {
-  id: string
-  name: string
-  email: string
-  role: 'admin' | 'teacher' | 'parent'
-}
+import { authService, User } from '../services/authService'
 
 interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
-  login: (email: string, password: string, role: 'admin' | 'teacher' | 'parent') => Promise<boolean>
+  login: (email: string, password: string) => Promise<boolean>
   logout: () => void
   loading: boolean
+  error: string | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -32,72 +27,82 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     // Check for existing session
-    const savedUser = localStorage.getItem('smart-child-user')
-    const token = localStorage.getItem('smart-child-token')
-    
-    if (savedUser && token) {
+    const initializeAuth = async () => {
       try {
-        setUser(JSON.parse(savedUser))
+        const savedUser = authService.getUser()
+        const token = authService.getToken()
+        
+        if (savedUser && token) {
+          // Validate token with server
+          const isValid = await authService.validateToken(token)
+          if (isValid) {
+            setUser(savedUser)
+          } else {
+            // Token is invalid, clear auth data
+            authService.clearAuth()
+          }
+        }
       } catch (error) {
-        // Clear invalid data
-        localStorage.removeItem('smart-child-user')
-        localStorage.removeItem('smart-child-token')
+        console.error('Error initializing auth:', error)
+        authService.clearAuth()
+      } finally {
+        setLoading(false)
       }
     }
-    setLoading(false)
+
+    initializeAuth()
   }, [])
 
-  const login = async (email: string, password: string, role: 'admin' | 'teacher' | 'parent'): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true)
+      setError(null)
       
-      // Mock authentication delay
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // Call API to login
+      const loginResponse = await authService.login(email, password)
       
-      // Create mock user based on input
-      const mockUser: User = {
-        id: 'user_' + Math.random().toString(36).substr(2, 9),
-        name: getRoleName(role, email),
-        email: email.toLowerCase(),
-        role: role
+      // Auto-detect role from backend response instead of requiring user selection
+      // This makes login more user-friendly
+      const backendRole = loginResponse.role
+      
+      // Map backend role to frontend role
+      const roleMapping: { [key: string]: 'admin' | 'teacher' | 'parent' } = {
+        'admin': 'admin',
+        'school': 'teacher',
+        'parent': 'parent'
       }
-
-      // Save to localStorage with prefixed keys
-      localStorage.setItem('smart-child-user', JSON.stringify(mockUser))
-      localStorage.setItem('smart-child-token', 'mock-jwt-token-' + Date.now())
       
-      setUser(mockUser)
+      const detectedRole = roleMapping[backendRole] || 'parent'
+      
+      // Role is automatically detected from backend response
+      console.log(`Auto-detected role: ${detectedRole} for user: ${email}`)
+      
+      // Get user information (using login response data)
+      const userData = await authService.getCurrentUser(loginResponse.access_token, email, backendRole)
+
+      // Store auth data
+      authService.setToken(loginResponse.access_token)
+      authService.setUser(userData)
+      
+      setUser(userData)
       setLoading(false)
       return true
     } catch (error) {
-      console.error('Mock login error:', error)
+      console.error('Login error:', error)
+      setError(error instanceof Error ? error.message : 'Đăng nhập thất bại')
       setLoading(false)
       return false
     }
   }
 
   const logout = () => {
-    localStorage.removeItem('smart-child-user')
-    localStorage.removeItem('smart-child-token')
+    authService.clearAuth()
     setUser(null)
-  }
-
-  // Helper function to generate display name based on role
-  const getRoleName = (role: string, email: string): string => {
-    const emailPrefix = email.split('@')[0]
-    switch (role) {
-      case 'admin':
-        return `Admin ${emailPrefix}`
-      case 'teacher':
-        return `Giáo viên ${emailPrefix}`
-      case 'parent':
-        return `Phụ huynh ${emailPrefix}`
-      default:
-        return emailPrefix
-    }
+    setError(null)
   }
 
   const value: AuthContextType = {
@@ -105,7 +110,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: !!user,
     login,
     logout,
-    loading
+    loading,
+    error
   }
 
   return (
