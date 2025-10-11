@@ -161,37 +161,6 @@ const ParentBehaviorReports: React.FC = () => {
         </div>
       </div>
 
-      {/* Behavior Profile */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold text-gray-900">🎯 Hồ sơ hành vi</h3>
-          <Target className="w-5 h-5 text-blue-500" />
-        </div>
-
-        <div className="space-y-4">
-          {behaviorProfile.frequentBehaviors.map((behavior, index) => (
-            <div key={index} className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-3">
-                  <span className="font-medium text-gray-900">{behavior.behavior}</span>
-                  <span className={`text-sm ${getTrendColor(behavior.trend)}`}>
-                    {getTrendIcon(behavior.trend)}
-                  </span>
-                </div>
-                <span className="text-sm font-medium text-gray-600">{behavior.percentage}%</span>
-              </div>
-              <p className="text-sm text-gray-600 mb-2">{behavior.description}</p>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${behavior.percentage}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Risk Assessment */}
         <div className="card">

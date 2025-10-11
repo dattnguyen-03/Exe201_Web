@@ -7,18 +7,6 @@ const ParentAlertsCenter: React.FC = () => {
 
   const alerts = [
     {
-      id: 1,
-      type: 'Leo trèo',
-      severity: 'Cao',
-      time: '10:30',
-      date: '2024-01-15',
-      location: 'Sân chơi',
-      description: 'Bé đã leo lên thiết bị chơi không an toàn tại khu vực sân chơi',
-      status: 'pending',
-      hasMedia: true,
-      confirmed: null
-    },
-    {
       id: 2,
       type: 'Ra khỏi vùng an toàn',
       severity: 'Trung bình',
@@ -42,18 +30,7 @@ const ParentAlertsCenter: React.FC = () => {
       hasMedia: true,
       confirmed: false
     },
-    {
-      id: 4,
-      type: 'Lang thang',
-      severity: 'Thấp',
-      time: '8:30',
-      date: '2024-01-14',
-      location: 'Phòng ăn',
-      description: 'Bé có biểu hiện lang thang trong giờ ăn',
-      status: 'confirmed',
-      hasMedia: false,
-      confirmed: true
-    }
+    
   ]
 
   const getSeverityColor = (severity: string) => {
