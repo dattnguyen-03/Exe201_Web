@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { showSuccess, showError, showWarning } from '../../utils/swal';
 import { 
   User, 
   Bell, 
@@ -96,7 +97,7 @@ const TeacherSettings: React.FC = () => {
 
   const handleChangePassword = () => {
     if (passwords.newPassword !== passwords.confirmPassword) {
-      alert('Mật khẩu mới không khớp!');
+      showWarning('Mật khẩu mới không khớp!');
       return;
     }
     // Implement change password logic

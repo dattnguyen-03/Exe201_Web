@@ -122,7 +122,7 @@ const AdminClassManagement: React.FC = () => {
       address: '',
       emergencyContact: ''
     })
-    alert('Học sinh đã được thêm thành công!')
+    showSuccess('Học sinh đã được thêm thành công!')
   }
 
   const handleAddClass = (e: React.FormEvent) => {
@@ -137,7 +137,7 @@ const AdminClassManagement: React.FC = () => {
       capacity: '',
       description: ''
     })
-    alert('Lớp học đã được tạo thành công!')
+    showSuccess('Lớp học đã được tạo thành công!')
   }
 
   return (

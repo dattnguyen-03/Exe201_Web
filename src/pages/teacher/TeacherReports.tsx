@@ -103,50 +103,9 @@ const TeacherReports: React.FC = () => {
           attendanceRate: 95.2
         }
       },
-      {
-        id: '2',
-        title: 'Báo cáo điểm danh - Tuần 4/12/2024',
-        type: 'attendance',
-        dateRange: '23/12/2024 - 29/12/2024',
-        generatedAt: '2024-12-29T16:00:00Z',
-        status: 'completed',
-        fileUrl: '/reports/attendance-week4-dec-2024.pdf',
-        summary: {
-          totalStudents: studentsData.length,
-          totalAlerts: 0,
-          avgBehaviorScore: 0,
-          attendanceRate: 97.8
-        }
-      },
-      {
-        id: '3',
-        title: 'Báo cáo an toàn - Tháng 12/2024',
-        type: 'safety',
-        dateRange: '01/12/2024 - 31/12/2024',
-        generatedAt: '2024-12-31T09:15:00Z',
-        status: 'processing',
-        summary: {
-          totalStudents: studentsData.length,
-          totalAlerts: alertsData.filter(a => a.severity >= 3).length,
-          avgBehaviorScore: 0,
-          attendanceRate: 0
-        }
-      },
-      {
-        id: '4',
-        title: 'Báo cáo học tập - Học kỳ 1/2024',
-        type: 'academic',
-        dateRange: '01/09/2024 - 31/12/2024',
-        generatedAt: '2024-12-30T14:20:00Z',
-        status: 'completed',
-        fileUrl: '/reports/academic-semester1-2024.pdf',
-        summary: {
-          totalStudents: studentsData.length,
-          totalAlerts: 0,
-          avgBehaviorScore: 8.2,
-          attendanceRate: 96.5
-        }
-      }
+      
+     
+     
     ];
     
     setReports(sampleReports);

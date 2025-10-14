@@ -41,7 +41,7 @@ const ParentAlertsCenter: React.FC = () => {
       ))
     } catch (err) {
       console.error('Error acknowledging alert:', err)
-      alert('Có lỗi khi xác nhận cảnh báo')
+      showError('Có lỗi khi xác nhận cảnh báo')
     } finally {
       setAcknowledging(null)
     }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { showSuccess, showError } from '../../utils/swal';
 import { 
   Users, 
   Search, 
@@ -121,7 +122,7 @@ const TeacherStudentManagement: React.FC = () => {
       setClasses(classesData);
     } catch (error) {
       console.error('Error loading data:', error);
-      alert('Không thể tải dữ liệu. Vui lòng kiểm tra kết nối API.');
+      showError('Không thể tải dữ liệu. Vui lòng kiểm tra kết nối API.');
     } finally {
       setLoading(false);
     }
@@ -184,10 +185,10 @@ const TeacherStudentManagement: React.FC = () => {
       setFormData({ full_name: '', date_of_birth: '', class_name: '', parent_email: '' });
       setShowAddModal(false);
       await loadData();
-      alert('Thêm học sinh thành công!');
+      showSuccess('Thêm học sinh thành công!');
     } catch (error) {
       console.error('Error adding student:', error);
-      alert('Không thể thêm học sinh. Vui lòng thử lại.');
+      showError('Không thể thêm học sinh. Vui lòng thử lại.');
     } finally {
       setSaving(false);
     }
@@ -210,10 +211,10 @@ const TeacherStudentManagement: React.FC = () => {
       setShowEditModal(false);
       setSelectedStudent(null);
       await loadData();
-      alert('Cập nhật học sinh thành công!');
+      showSuccess('Cập nhật học sinh thành công!');
     } catch (error) {
       console.error('Error updating student:', error);
-      alert('Không thể cập nhật học sinh. Vui lòng thử lại.');
+      showError('Không thể cập nhật học sinh. Vui lòng thử lại.');
     } finally {
       setSaving(false);
     }
@@ -225,10 +226,10 @@ const TeacherStudentManagement: React.FC = () => {
     try {
       await teacherApiService.deleteStudent(studentId);
       await loadData();
-      alert('Xóa học sinh thành công!');
+      showSuccess('Xóa học sinh thành công!');
     } catch (error) {
       console.error('Error deleting student:', error);
-      alert('Không thể xóa học sinh. Vui lòng thử lại.');
+      showError('Không thể xóa học sinh. Vui lòng thử lại.');
     }
   };
 
@@ -275,7 +276,7 @@ const TeacherStudentManagement: React.FC = () => {
       });
     } catch (error) {
       console.error('Error fetching student details:', error);
-      alert('Không thể tải thông tin học sinh.');
+      showError('Không thể tải thông tin học sinh.');
     }
   };
 

@@ -147,13 +147,13 @@ const AdminParentManagement: React.FC = () => {
     e.preventDefault()
     
     if (newParent.password !== newParent.confirmPassword) {
-      alert('Mật khẩu xác nhận không khớp!')
+      showWarning('Mật khẩu xác nhận không khớp!')
       return
     }
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(newParent.email)) {
-      alert('Email không hợp lệ!')
+      showWarning('Email không hợp lệ!')
       return
     }
     
@@ -173,7 +173,7 @@ const AdminParentManagement: React.FC = () => {
       emergencyContact: '',
       permissions: []
     })
-    alert('Phụ huynh đã được thêm thành công!')
+    showSuccess('Phụ huynh đã được thêm thành công!')
   }
 
   const handleViewDetail = (parent: any) => {

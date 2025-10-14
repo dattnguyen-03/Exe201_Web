@@ -121,13 +121,13 @@ const AdminTeacherManagement: React.FC = () => {
     e.preventDefault()
     
     if (newTeacher.password !== newTeacher.confirmPassword) {
-      alert('Mật khẩu xác nhận không khớp!')
+      showWarning('Mật khẩu xác nhận không khớp!')
       return
     }
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(newTeacher.email)) {
-      alert('Email không hợp lệ!')
+      showWarning('Email không hợp lệ!')
       return
     }
     
@@ -145,7 +145,7 @@ const AdminTeacherManagement: React.FC = () => {
       address: '',
       permissions: []
     })
-    alert('Giáo viên đã được thêm thành công!')
+    showSuccess('Giáo viên đã được thêm thành công!')
   }
 
   const handleViewDetail = (teacher: any) => {

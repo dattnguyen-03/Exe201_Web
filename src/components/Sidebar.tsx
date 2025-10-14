@@ -43,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     { to: '/teacher/students', icon: UserCheck, label: 'Quản lý Học sinh' },
     { to: '/teacher/teachers', icon: GraduationCap, label: 'Quản lý Giáo viên' },
     { to: '/teacher/cameras', icon: Camera, label: 'Quản lý Camera' },
-    { to: '/teacher/messages', icon: MessageSquare, label: 'Giao tiếp PH' },
+    // { to: '/teacher/messages', icon: MessageSquare, label: 'Giao tiếp PH' },
     { to: '/teacher/reports', icon: BarChart3, label: 'Báo cáo & Thống kê' },
     { to: '/teacher/settings', icon: Settings, label: 'Cài đặt' },
   ]
@@ -111,20 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
           ))}
         </ul>
 
-        {/* Quick Stats */}
-        <div className="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200">
-          <h3 className="text-sm font-semibold text-gray-800 mb-3">Thống Kê Nhanh</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-700">Cảnh báo hôm nay:</span>
-              <span className="font-medium text-blue-600">3</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-700">Trạng thái camera:</span>
-              <span className="font-medium text-green-600">Hoạt động</span>
-            </div>
-          </div>
-        </div>
+        
       </nav>
     </aside>
   )

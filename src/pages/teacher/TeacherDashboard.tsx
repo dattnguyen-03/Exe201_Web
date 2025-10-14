@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { showSuccess, showError, showWarning } from '../../utils/swal';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
@@ -194,7 +195,7 @@ const TeacherDashboard: React.FC = () => {
     } catch (error) {
       console.error('❌ Error loading dashboard data:', error);
       // Show error message to user
-      alert('Không thể tải dữ liệu dashboard. Vui lòng kiểm tra kết nối API.');
+      showWarning('Không thể tải dữ liệu dashboard. Vui lòng kiểm tra kết nối API.');
     } finally {
       setLoading(false);
     }

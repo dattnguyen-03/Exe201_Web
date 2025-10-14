@@ -196,7 +196,7 @@ const AdminPermissionManagement: React.FC = () => {
     console.log('Creating role:', newRole)
     setShowCreateRoleModal(false)
     setNewRole({ name: '', description: '', permissions: [] })
-    alert('Vai trò đã được tạo thành công!')
+    showSuccess('Vai trò đã được tạo thành công!')
   }
 
   const handleEditPermissions = (user: any) => {
@@ -210,7 +210,7 @@ const AdminPermissionManagement: React.FC = () => {
     setShowEditPermissionModal(false)
     setSelectedUser(null)
     setUserPermissions([])
-    alert('Quyền đã được cập nhật thành công!')
+    showSuccess('Quyền đã được cập nhật thành công!')
   }
 
   const togglePermission = (permissionId: string) => {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Users, Plus, Edit, Trash2, Search, Filter, UserCheck, Shield, Mail, Phone, X, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { showSuccess, showError, showWarning } from '../../utils/swal'
 
 const AdminAccountManagement: React.FC = () => {
   const navigate = useNavigate()
@@ -100,14 +101,14 @@ const AdminAccountManagement: React.FC = () => {
     
     // Validate password match
     if (newAccount.password !== newAccount.confirmPassword) {
-      alert('Mật khẩu xác nhận không khớp!')
+      showWarning('Mật khẩu xác nhận không khớp!')
       return
     }
     
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(newAccount.email)) {
-      alert('Email không hợp lệ!')
+      showWarning('Email không hợp lệ!')
       return
     }
     
@@ -123,7 +124,7 @@ const AdminAccountManagement: React.FC = () => {
       class: '',
       permissions: []
     })
-    alert('Tài khoản đã được tạo thành công!')
+    showSuccess('Tài khoản đã được tạo thành công!')
   }
 
   const filteredAccounts = accounts.filter(account => {
