@@ -122,21 +122,21 @@ const ParentDashboard: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-2xl p-6">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl p-6">
         <h1 className="text-2xl font-bold mb-2">Chào mừng trở lại! 👋</h1>
-        <p className="text-amber-100">Theo dõi tình hình của {childData.name} hôm nay</p>
+        <p className="text-blue-100">Theo dõi tình hình của {childData.name} hôm nay</p>
       </div>
 
       {/* Child Status Card */}
-      <div className="card bg-gradient-to-br from-amber-25 to-orange-25 border-amber-200">
+      <div className="card bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center space-x-4">
-            <div className="h-16 w-16 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center">
+            <div className="h-16 w-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
               <User className="w-8 h-8 text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">{childData.name}</h2>
-              <p className="text-amber-700">{childData.class} • {childData.age} tuổi</p>
+              <p className="text-blue-700">{childData.class} • {childData.age} tuổi</p>
             </div>
           </div>
           <div className="text-right">
@@ -150,14 +150,14 @@ const ParentDashboard: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex items-center space-x-3 p-3 bg-white/60 backdrop-blur-sm rounded-lg shadow-sm">
-            <MapPin className="w-5 h-5 text-amber-600" />
+            <MapPin className="w-5 h-5 text-blue-600" />
             <div>
               <p className="text-sm text-gray-600">Vị trí hiện tại</p>
               <p className="font-medium text-gray-900">{childData.currentLocation}</p>
             </div>
           </div>
           <div className="flex items-center space-x-3 p-3 bg-white/60 backdrop-blur-sm rounded-lg shadow-sm">
-            <Activity className="w-5 h-5 text-orange-600" />
+            <Activity className="w-5 h-5 text-indigo-600" />
             <div>
               <p className="text-sm text-gray-600">Hoạt động</p>
               <p className="font-medium text-gray-900">{childData.currentActivity}</p>
@@ -168,13 +168,13 @@ const ParentDashboard: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card bg-gradient-to-br from-amber-25 to-amber-50 border-amber-200">
+        <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-amber-700 font-medium">Cảnh báo hôm nay</p>
-              <p className="text-2xl font-bold text-amber-900">{todayStats.totalAlerts}</p>
+              <p className="text-sm text-blue-700 font-medium">Cảnh báo hôm nay</p>
+              <p className="text-2xl font-bold text-blue-900">{todayStats.totalAlerts}</p>
             </div>
-            <AlertTriangle className="w-8 h-8 text-amber-600" />
+            <AlertTriangle className="w-8 h-8 text-blue-600" />
           </div>
         </div>
 
@@ -188,23 +188,23 @@ const ParentDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="card bg-gradient-to-br from-orange-25 to-orange-50 border-orange-200">
+        <div className="card bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-orange-700 font-medium">Thời gian hoạt động</p>
-              <p className="text-2xl font-bold text-orange-900">{todayStats.activeTime}</p>
+              <p className="text-sm text-indigo-700 font-medium">Thời gian hoạt động</p>
+              <p className="text-2xl font-bold text-indigo-900">{todayStats.activeTime}</p>
             </div>
-            <Clock className="w-8 h-8 text-orange-600" />
+            <Clock className="w-8 h-8 text-indigo-600" />
           </div>
         </div>
 
-        <div className="card bg-gradient-to-br from-yellow-25 to-yellow-50 border-yellow-200">
+        <div className="card bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-yellow-700 font-medium">Điểm hành vi</p>
-              <p className="text-2xl font-bold text-yellow-900">{todayStats.behaviorScore}</p>
+              <p className="text-sm text-purple-700 font-medium">Điểm hành vi</p>
+              <p className="text-2xl font-bold text-purple-900">{todayStats.behaviorScore}</p>
             </div>
-            <TrendingUp className="w-8 h-8 text-yellow-600" />
+            <TrendingUp className="w-8 h-8 text-purple-600" />
           </div>
         </div>
       </div>
@@ -214,13 +214,13 @@ const ParentDashboard: React.FC = () => {
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-gray-900">Cảnh báo gần đây</h3>
-            <AlertTriangle className="w-5 h-5 text-amber-600" />
+            <AlertTriangle className="w-5 h-5 text-blue-600" />
           </div>
 
           <div className="space-y-3">
             {dashboardData.recent_alerts.length > 0 ? (
               dashboardData.recent_alerts.map((alert) => (
-                <div key={alert.id} className="p-4 bg-amber-25 rounded-lg hover:bg-amber-50 transition-colors">
+                <div key={alert.id} className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">

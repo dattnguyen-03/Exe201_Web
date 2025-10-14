@@ -5,7 +5,7 @@ import Layout from './Layout'
 import { Loader2 } from 'lucide-react'
 
 interface ProtectedRouteProps {
-  role: 'parent' | 'admin' | 'teacher'
+  role: 'parent' | 'admin' | 'teacher' | 'school'
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ role }) => {

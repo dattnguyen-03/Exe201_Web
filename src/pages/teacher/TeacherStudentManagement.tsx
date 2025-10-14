@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   Search, 
@@ -17,141 +17,125 @@ import {
   Upload,
   MoreVertical,
   UserPlus,
-  MessageSquare
+  MessageSquare,
+  Trash2,
+  Save,
+  RefreshCw,
+  Loader2
 } from 'lucide-react';
+import { teacherApiService, Child, ClassRoom, Parent, ChildStatus } from '../../services/teacherApiService';
 
-interface Student {
-  id: string;
-  name: string;
-  studentId: string;
-  status: 'present' | 'absent' | 'late';
-  attendanceRate: number;
-  behaviorScore: number;
-  averageGrade: number;
-  parentName: string;
-  parentPhone: string;
-  parentEmail: string;
-  dateOfBirth: string;
-  address: string;
-  emergencyContact: string;
-  medicalNotes?: string;
-  lastUpdate: string;
-  avatar?: string;
-  recentActivity: string;
-  alerts: number;
+interface Student extends Child {
+  class_name?: string;
+  parent_email?: string;
+  parent_name?: string;
+  parent_phone?: string;
+  status?: 'present' | 'absent' | 'late';
+  attendance_rate?: number;
+  behavior_score?: number;
+  average_grade?: number;
+  alerts?: number;
+  last_update?: string;
+  recent_activity?: string;
 }
 
 const TeacherStudentManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<ClassRoom[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  
+  // Form states
+  const [formData, setFormData] = useState({
+    full_name: '',
+    date_of_birth: '',
+    class_name: '',
+    parent_email: ''
+  });
+  const [editFormData, setEditFormData] = useState({
+    full_name: '',
+    date_of_birth: '',
+    class_name: '',
+    parent_email: ''
+  });
 
-  const [students] = useState<Student[]>([
-    {
-      id: '1',
-      name: 'Nguyễn Văn An',
-      studentId: 'HS001',
-      status: 'present',
-      attendanceRate: 95,
-      behaviorScore: 88,
-      averageGrade: 8.5,
-      parentName: 'Nguyễn Thị Bình',
-      parentPhone: '0987654321',
-      parentEmail: 'nguyenbinh@email.com',
-      dateOfBirth: '2015-03-15',
-      address: '123 Đường ABC, Quận 1, TP.HCM',
-      emergencyContact: '0912345678',
-      medicalNotes: 'Dị ứng với đậu phộng',
-      lastUpdate: '5 phút trước',
-      recentActivity: 'Hoàn thành bài tập Toán',
-      alerts: 0
-    },
-    {
-      id: '2',
-      name: 'Trần Thị Bình',
-      studentId: 'HS002',
-      status: 'present',
-      attendanceRate: 92,
-      behaviorScore: 92,
-      averageGrade: 9.0,
-      parentName: 'Trần Văn Cường',
-      parentPhone: '0976543210',
-      parentEmail: 'tranvancuong@email.com',
-      dateOfBirth: '2015-07-22',
-      address: '456 Đường XYZ, Quận 2, TP.HCM',
-      emergencyContact: '0923456789',
-      lastUpdate: '10 phút trước',
-      recentActivity: 'Tham gia thảo luận nhóm',
-      alerts: 0
-    },
-    {
-      id: '3',
-      name: 'Lê Văn Cường',
-      studentId: 'HS003',
-      status: 'late',
-      attendanceRate: 85,
-      behaviorScore: 75,
-      averageGrade: 7.5,
-      parentName: 'Lê Thị Dung',
-      parentPhone: '0965432109',
-      parentEmail: 'lethidung@email.com',
-      dateOfBirth: '2015-11-08',
-      address: '789 Đường DEF, Quận 3, TP.HCM',
-      emergencyContact: '0934567890',
-      medicalNotes: 'Cận thị nhẹ',
-      lastUpdate: '15 phút trước',
-      recentActivity: 'Đến muộn 15 phút',
-      alerts: 2
-    },
-    {
-      id: '4',
-      name: 'Phạm Thị Dung',
-      studentId: 'HS004',
-      status: 'absent',
-      attendanceRate: 78,
-      behaviorScore: 85,
-      averageGrade: 8.0,
-      parentName: 'Phạm Văn Em',
-      parentPhone: '0954321098',
-      parentEmail: 'phamvanem@email.com',
-      dateOfBirth: '2015-05-30',
-      address: '321 Đường GHI, Quận 4, TP.HCM',
-      emergencyContact: '0945678901',
-      lastUpdate: '1 giờ trước',
-      recentActivity: 'Vắng mặt không phép',
-      alerts: 1
-    },
-    {
-      id: '5',
-      name: 'Hoàng Văn Em',
-      studentId: 'HS005',
-      status: 'present',
-      attendanceRate: 98,
-      behaviorScore: 95,
-      averageGrade: 9.5,
-      parentName: 'Hoàng Thị Phương',
-      parentPhone: '0943210987',
-      parentEmail: 'hoangphuong@email.com',
-      dateOfBirth: '2015-09-12',
-      address: '654 Đường JKL, Quận 5, TP.HCM',
-      emergencyContact: '0956789012',
-      lastUpdate: '2 phút trước',
-      recentActivity: 'Đạt điểm cao bài kiểm tra',
-      alerts: 0
+  // Load data from API
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [studentsData, classesData] = await Promise.all([
+        teacherApiService.getStudents(),
+        teacherApiService.getClasses()
+      ]);
+      
+      // Get parent information and status for all students
+      const studentsWithParents = await Promise.all(
+        studentsData.map(async (student) => {
+          let parentInfo: Parent | null = null;
+          let childStatus: ChildStatus | null = null;
+          
+          // Get parent info
+          if (student.parent_id) {
+            try {
+              parentInfo = await teacherApiService.getParent(student.parent_id);
+            } catch (error) {
+              console.warn(`Could not fetch parent info for student ${student.id}:`, error);
+            }
+          }
+          
+          // Get child status
+          try {
+            childStatus = await teacherApiService.getChildStatus(student.id);
+          } catch (error) {
+            console.warn(`Could not fetch status for student ${student.id}:`, error);
+          }
+          
+          return {
+            ...student,
+            class_name: classesData.find(cls => cls.id === student.class_id)?.name,
+            parent_email: parentInfo?.email,
+            parent_name: parentInfo?.full_name,
+            parent_phone: parentInfo?.phone,
+            status: childStatus?.status || 'absent',
+            attendance_rate: childStatus?.behavior_score || 0,
+            behavior_score: childStatus?.behavior_score || 0,
+            average_grade: childStatus?.behavior_score || 0, // Using behavior score as average grade for now
+            alerts: childStatus?.alert_severity || 0,
+            last_update: childStatus?.last_activity ? 'Hoạt động gần đây' : 'Chưa có hoạt động',
+            recent_activity: childStatus?.recent_alert || 'Không có hoạt động gần đây'
+          };
+        })
+      );
+      
+      setStudents(studentsWithParents);
+      setClasses(classesData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      alert('Không thể tải dữ liệu. Vui lòng kiểm tra kết nối API.');
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
   const filteredStudents = students.filter(student => {
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.studentId.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = student.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         student.id.toString().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || student.status === filterStatus;
     
     return matchesSearch && matchesFilter;
   });
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status?: string) => {
     switch (status) {
       case 'present': return 'text-green-600 bg-green-100';
       case 'absent': return 'text-red-600 bg-red-100';
@@ -160,7 +144,7 @@ const TeacherStudentManagement: React.FC = () => {
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status?: string) => {
     switch (status) {
       case 'present': return 'Có mặt';
       case 'absent': return 'Vắng mặt';
@@ -169,7 +153,7 @@ const TeacherStudentManagement: React.FC = () => {
     }
   };
 
-  const toggleStudentSelection = (studentId: string) => {
+  const toggleStudentSelection = (studentId: number) => {
     setSelectedStudents(prev => 
       prev.includes(studentId)
         ? prev.filter(id => id !== studentId)
@@ -185,14 +169,135 @@ const TeacherStudentManagement: React.FC = () => {
     }
   };
 
+  // Form handlers
+  const handleAddStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      await teacherApiService.createStudent(
+        formData.full_name,
+        formData.date_of_birth,
+        formData.class_name || undefined,
+        formData.parent_email || undefined
+      );
+      
+      setFormData({ full_name: '', date_of_birth: '', class_name: '', parent_email: '' });
+      setShowAddModal(false);
+      await loadData();
+      alert('Thêm học sinh thành công!');
+    } catch (error) {
+      console.error('Error adding student:', error);
+      alert('Không thể thêm học sinh. Vui lòng thử lại.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStudent) return;
+    
+    try {
+      setSaving(true);
+      await teacherApiService.updateStudent(
+        selectedStudent.id,
+        editFormData.full_name,
+        editFormData.date_of_birth,
+        editFormData.class_name || undefined,
+        editFormData.parent_email || undefined
+      );
+      
+      setShowEditModal(false);
+      setSelectedStudent(null);
+      await loadData();
+      alert('Cập nhật học sinh thành công!');
+    } catch (error) {
+      console.error('Error updating student:', error);
+      alert('Không thể cập nhật học sinh. Vui lòng thử lại.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteStudent = async (studentId: number) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa học sinh này?')) return;
+    
+    try {
+      await teacherApiService.deleteStudent(studentId);
+      await loadData();
+      alert('Xóa học sinh thành công!');
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      alert('Không thể xóa học sinh. Vui lòng thử lại.');
+    }
+  };
+
+  const handleViewStudent = async (studentId: number) => {
+    try {
+      const [student, childStatus] = await Promise.all([
+        teacherApiService.getStudent(studentId),
+        teacherApiService.getChildStatus(studentId)
+      ]);
+      
+      // Find the student in our local state to get additional fields
+      const localStudent = students.find(s => s.id === studentId);
+      
+      // Get parent information if parent_id exists
+      let parentInfo: Parent | null = null;
+      if (student.parent_id) {
+        try {
+          parentInfo = await teacherApiService.getParent(student.parent_id);
+        } catch (error) {
+          console.warn('Could not fetch parent info:', error);
+        }
+      }
+      
+      const studentWithExtras: Student = {
+        ...student,
+        class_name: localStudent?.class_name,
+        parent_email: parentInfo?.email || localStudent?.parent_email,
+        parent_name: parentInfo?.full_name || localStudent?.parent_name,
+        parent_phone: parentInfo?.phone || localStudent?.parent_phone,
+        status: childStatus?.status || 'absent',
+        attendance_rate: childStatus?.behavior_score || 0,
+        behavior_score: childStatus?.behavior_score || 0,
+        average_grade: childStatus?.behavior_score || 0,
+        alerts: childStatus?.alert_severity || 0,
+        last_update: childStatus?.last_activity ? 'Hoạt động gần đây' : 'Chưa có hoạt động',
+        recent_activity: childStatus?.recent_alert || 'Không có hoạt động gần đây'
+      };
+      setSelectedStudent(studentWithExtras);
+      setEditFormData({
+        full_name: student.full_name,
+        date_of_birth: student.date_of_birth || '',
+        class_name: localStudent?.class_name || '',
+        parent_email: parentInfo?.email || localStudent?.parent_email || ''
+      });
+    } catch (error) {
+      console.error('Error fetching student details:', error);
+      alert('Không thể tải thông tin học sinh.');
+    }
+  };
+
+  const openEditModal = (student: Student) => {
+    setSelectedStudent(student);
+    setEditFormData({
+      full_name: student.full_name,
+      date_of_birth: student.date_of_birth || '',
+      class_name: student.class_name || '',
+      parent_email: student.parent_email || ''
+    });
+    setShowEditModal(true);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       {/* Header */}
-      <div className="bg-white shadow-lg border-b border-gray-200">
+      <div className="bg-white/80 backdrop-blur-xl shadow-lg border-b border-blue-200/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-xl">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-xl">
                 <Users className="h-8 w-8 text-white" />
               </div>
               <div>
@@ -202,17 +307,14 @@ const TeacherStudentManagement: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+             
+              
               <button 
                 onClick={() => setShowAddModal(true)}
                 className="btn-primary flex items-center space-x-2"
               >
                 <UserPlus className="w-5 h-5" />
                 <span>Thêm học sinh</span>
-              </button>
-              
-              <button className="btn-secondary flex items-center space-x-2">
-                <Download className="w-5 h-5" />
-                <span>Xuất danh sách</span>
               </button>
             </div>
           </div>
@@ -222,7 +324,7 @@ const TeacherStudentManagement: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Tổng học sinh</p>
@@ -232,7 +334,7 @@ const TeacherStudentManagement: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Có mặt hôm nay</p>
@@ -244,7 +346,7 @@ const TeacherStudentManagement: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Vắng mặt</p>
@@ -256,7 +358,7 @@ const TeacherStudentManagement: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Đến muộn</p>
@@ -270,7 +372,7 @@ const TeacherStudentManagement: React.FC = () => {
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-100">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
             <div className="flex items-center space-x-4">
               <div className="relative">
@@ -316,7 +418,7 @@ const TeacherStudentManagement: React.FC = () => {
         </div>
 
         {/* Students Table */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -367,12 +469,12 @@ const TeacherStudentManagement: React.FC = () => {
                       <div className="flex items-center">
                         <div className="h-10 w-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
                           <span className="text-white font-medium text-sm">
-                            {student.name.charAt(0)}
+                            {student.full_name.charAt(0)}
                           </span>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{student.name}</div>
-                          <div className="text-sm text-gray-500">{student.studentId}</div>
+                          <div className="text-sm font-medium text-gray-900">{student.full_name}</div>
+                          <div className="text-sm text-gray-500">ID: {student.id}</div>
                         </div>
                       </div>
                     </td>
@@ -380,53 +482,68 @@ const TeacherStudentManagement: React.FC = () => {
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(student.status)}`}>
                         {getStatusText(student.status)}
                       </span>
-                      {student.alerts > 0 && (
+                      {(student.alerts || 0) > 0 && (
                         <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                           {student.alerts} cảnh báo
                         </span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {student.attendanceRate}%
+                      {student.attendance_rate || 0}%
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex items-center">
                         <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
                           <div 
                             className="bg-purple-600 h-2 rounded-full" 
-                            style={{ width: `${student.behaviorScore}%` }}
+                            style={{ width: `${student.behavior_score || 0}%` }}
                           ></div>
                         </div>
-                        <span>{student.behaviorScore}</span>
+                        <span>{student.behavior_score || 0}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {student.averageGrade}
+                      {student.average_grade || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div>
-                        <div className="font-medium">{student.parentName}</div>
-                        <div className="text-gray-500">{student.parentPhone}</div>
+                        <div className="font-medium">{student.parent_name || 'Chưa có'}</div>
+                        <div className="text-gray-500">{student.parent_phone || 'Chưa có'}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
                         <button 
-                          onClick={() => setSelectedStudent(student)}
+                          onClick={() => handleViewStudent(student.id)}
                           className="text-blue-600 hover:text-blue-900"
                           title="Xem chi tiết"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button className="text-green-600 hover:text-green-900" title="Gọi điện">
-                          <Phone className="w-4 h-4" />
+                        <button 
+                          onClick={() => openEditModal(student)}
+                          className="text-green-600 hover:text-green-900" 
+                          title="Chỉnh sửa"
+                        >
+                          <Edit className="w-4 h-4" />
                         </button>
-                        <button className="text-purple-600 hover:text-purple-900" title="Gửi email">
-                          <Mail className="w-4 h-4" />
+                        <button 
+                          onClick={() => handleDeleteStudent(student.id)}
+                          className="text-red-600 hover:text-red-900" 
+                          title="Xóa"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
-                        <button className="text-orange-600 hover:text-orange-900" title="Nhắn tin">
-                          <MessageSquare className="w-4 h-4" />
-                        </button>
+                        {student.parent_phone && (
+                          <button className="text-green-600 hover:text-green-900" title="Gọi điện">
+                            <Phone className="w-4 h-4" />
+                          </button>
+                        )}
+                        {student.parent_email && (
+                          <button className="text-purple-600 hover:text-purple-900" title="Gửi email">
+                            <Mail className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -437,8 +554,181 @@ const TeacherStudentManagement: React.FC = () => {
         </div>
       </div>
 
+      {/* Add Student Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Thêm học sinh mới</h2>
+              <button 
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddStudent} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Họ tên <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.full_name}
+                  onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Nhập họ tên học sinh"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ngày sinh <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={formData.date_of_birth}
+                  onChange={(e) => setFormData({...formData, date_of_birth: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Lớp học</label>
+                <select
+                  value={formData.class_name}
+                  onChange={(e) => setFormData({...formData, class_name: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Chọn lớp học</option>
+                  {classes.map((cls) => (
+                    <option key={cls.id} value={cls.name}>{cls.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email phụ huynh</label>
+                <input
+                  type="email"
+                  value={formData.parent_email}
+                  onChange={(e) => setFormData({...formData, parent_email: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="email@example.com"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="btn-secondary"
+                >
+                  Hủy
+                </button>
+                <button 
+                  type="submit"
+                  disabled={saving}
+                  className="btn-primary flex items-center space-x-2"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  <span>{saving ? 'Đang lưu...' : 'Thêm học sinh'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Student Modal */}
+      {showEditModal && selectedStudent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Chỉnh sửa học sinh</h2>
+              <button 
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditStudent} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Họ tên <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.full_name}
+                  onChange={(e) => setEditFormData({...editFormData, full_name: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ngày sinh</label>
+                <input
+                  type="date"
+                  value={editFormData.date_of_birth}
+                  onChange={(e) => setEditFormData({...editFormData, date_of_birth: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Lớp học</label>
+                <select
+                  value={editFormData.class_name}
+                  onChange={(e) => setEditFormData({...editFormData, class_name: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Chọn lớp học</option>
+                  {classes.map((cls) => (
+                    <option key={cls.id} value={cls.name}>{cls.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email phụ huynh</label>
+                <input
+                  type="email"
+                  value={editFormData.parent_email}
+                  onChange={(e) => setEditFormData({...editFormData, parent_email: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="btn-secondary"
+                >
+                  Hủy
+                </button>
+                <button 
+                  type="submit"
+                  disabled={saving}
+                  className="btn-primary flex items-center space-x-2"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  <span>{saving ? 'Đang lưu...' : 'Cập nhật'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Student Detail Modal */}
-      {selectedStudent && (
+      {selectedStudent && !showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
@@ -457,26 +747,20 @@ const TeacherStudentManagement: React.FC = () => {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Họ tên</label>
-                    <p className="text-gray-900">{selectedStudent.name}</p>
+                    <p className="text-gray-900">{selectedStudent.full_name}</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Mã học sinh</label>
-                    <p className="text-gray-900">{selectedStudent.studentId}</p>
+                    <label className="block text-sm font-medium text-gray-700">ID học sinh</label>
+                    <p className="text-gray-900">{selectedStudent.id}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Ngày sinh</label>
-                    <p className="text-gray-900">{selectedStudent.dateOfBirth}</p>
+                    <p className="text-gray-900">{selectedStudent.date_of_birth || 'Chưa có'}</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Địa chỉ</label>
-                    <p className="text-gray-900">{selectedStudent.address}</p>
+                    <label className="block text-sm font-medium text-gray-700">Lớp học</label>
+                    <p className="text-gray-900">{selectedStudent.class_name || 'Chưa phân lớp'}</p>
                   </div>
-                  {selectedStudent.medicalNotes && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Ghi chú y tế</label>
-                      <p className="text-gray-900">{selectedStudent.medicalNotes}</p>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -485,19 +769,15 @@ const TeacherStudentManagement: React.FC = () => {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Họ tên phụ huynh</label>
-                    <p className="text-gray-900">{selectedStudent.parentName}</p>
+                    <p className="text-gray-900">{selectedStudent.parent_name || 'Chưa có'}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
-                    <p className="text-gray-900">{selectedStudent.parentPhone}</p>
+                    <p className="text-gray-900">{selectedStudent.parent_phone || 'Chưa có'}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Email</label>
-                    <p className="text-gray-900">{selectedStudent.parentEmail}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Liên hệ khẩn cấp</label>
-                    <p className="text-gray-900">{selectedStudent.emergencyContact}</p>
+                    <p className="text-gray-900">{selectedStudent.parent_email || 'Chưa có'}</p>
                   </div>
                 </div>
               </div>
@@ -507,15 +787,15 @@ const TeacherStudentManagement: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Thống kê học tập</h3>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <p className="text-2xl font-bold text-blue-600">{selectedStudent.attendanceRate}%</p>
+                  <p className="text-2xl font-bold text-blue-600">{selectedStudent.attendance_rate || 0}%</p>
                   <p className="text-sm text-gray-600">Tỷ lệ điểm danh</p>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <p className="text-2xl font-bold text-purple-600">{selectedStudent.behaviorScore}</p>
+                  <p className="text-2xl font-bold text-purple-600">{selectedStudent.behavior_score || 0}</p>
                   <p className="text-sm text-gray-600">Điểm hành vi</p>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <p className="text-2xl font-bold text-green-600">{selectedStudent.averageGrade}</p>
+                  <p className="text-2xl font-bold text-green-600">{selectedStudent.average_grade || 0}</p>
                   <p className="text-sm text-gray-600">Điểm trung bình</p>
                 </div>
               </div>
@@ -528,7 +808,10 @@ const TeacherStudentManagement: React.FC = () => {
               >
                 Đóng
               </button>
-              <button className="btn-primary">
+              <button 
+                onClick={() => openEditModal(selectedStudent)}
+                className="btn-primary"
+              >
                 Chỉnh sửa
               </button>
             </div>

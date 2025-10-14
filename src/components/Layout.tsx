@@ -9,11 +9,11 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, role }) => {
   return (
-    <div className="flex h-screen bg-gradient-to-br from-amber-25 via-orange-25 to-yellow-25">
+    <div className="flex h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <Sidebar role={role} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gradient-to-br from-amber-25 via-orange-25 to-yellow-25 p-6">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
           {children}
         </main>
       </div>

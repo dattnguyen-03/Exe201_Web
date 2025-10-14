@@ -38,9 +38,13 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
 
   const teacherNavItems = [
     { to: '/teacher', icon: Home, label: 'Dashboard Giáo viên', end: true },
-    { to: '/teacher/students', icon: Users, label: 'Quản lý Học sinh' },
-    { to: '/teacher/attendance', icon: UserCheck, label: 'Điểm danh & Camera' },
+    { to: '/teacher/live-view', icon: Video, label: 'Xem Trực tiếp' },
+    { to: '/teacher/classes', icon: Users, label: 'Quản lý Lớp học' },
+    { to: '/teacher/students', icon: UserCheck, label: 'Quản lý Học sinh' },
+    { to: '/teacher/teachers', icon: GraduationCap, label: 'Quản lý Giáo viên' },
+    { to: '/teacher/cameras', icon: Camera, label: 'Quản lý Camera' },
     { to: '/teacher/messages', icon: MessageSquare, label: 'Giao tiếp PH' },
+    { to: '/teacher/reports', icon: BarChart3, label: 'Báo cáo & Thống kê' },
     { to: '/teacher/settings', icon: Settings, label: 'Cài đặt' },
   ]
 
@@ -59,12 +63,12 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
   const navItems = role === 'parent' ? parentNavItems : role === 'teacher' ? teacherNavItems : adminNavItems
 
   return (
-    <aside className="bg-white/80 backdrop-blur-sm w-72 min-h-screen shadow-lg border-r border-amber-200">
+    <aside className="bg-white/80 backdrop-blur-sm w-72 min-h-screen shadow-lg border-r border-blue-200">
       <nav className="p-4">
         {/* Role Badge */}
-        <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
+        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
           <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 bg-gradient-to-r from-amber-600 to-orange-600 rounded-lg flex items-center justify-center">
+            <div className="h-10 w-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
               {role === 'parent' ? (
                 <Users className="w-5 h-5 text-white" />
               ) : role === 'teacher' ? (
@@ -95,8 +99,8 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
                 end={item.end}
                 className={({ isActive }) =>
                   `flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg'
-                    : 'text-gray-800 hover:bg-amber-50 hover:text-amber-700'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                    : 'text-gray-800 hover:bg-blue-50 hover:text-blue-700'
                   }`
                 }
               >
@@ -108,12 +112,12 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
         </ul>
 
         {/* Quick Stats */}
-        <div className="mt-8 p-4 bg-amber-25 rounded-xl border border-amber-200">
+        <div className="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200">
           <h3 className="text-sm font-semibold text-gray-800 mb-3">Thống Kê Nhanh</h3>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-700">Cảnh báo hôm nay:</span>
-              <span className="font-medium text-orange-600">3</span>
+              <span className="font-medium text-blue-600">3</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-700">Trạng thái camera:</span>

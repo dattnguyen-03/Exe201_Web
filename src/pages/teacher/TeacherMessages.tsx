@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MessageSquare, 
   Send, 
@@ -16,8 +16,10 @@ import {
   CheckCheck,
   AlertCircle,
   Star,
-  Archive
+  Archive,
+  RefreshCw
 } from 'lucide-react';
+import { teacherApiService, Child, Alert } from '../../services/teacherApiService';
 
 interface Message {
   id: string;
@@ -48,6 +50,30 @@ const TeacherMessages: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [students, setStudents] = useState<Child[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [studentsData, alertsData] = await Promise.all([
+        teacherApiService.getStudents(),
+        teacherApiService.getAlerts()
+      ]);
+      
+      setStudents(studentsData);
+      setAlerts(alertsData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [conversations] = useState<Conversation[]>([
     {
@@ -187,6 +213,14 @@ const TeacherMessages: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <button 
+                onClick={loadData}
+                disabled={loading}
+                className="btn-secondary flex items-center space-x-2"
+              >
+                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                <span>Làm mới</span>
+              </button>
               <button className="btn-secondary flex items-center space-x-2">
                 <Plus className="w-5 h-5" />
                 <span>Tin nhắn mới</span>

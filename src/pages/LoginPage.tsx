@@ -35,35 +35,33 @@ const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 flex items-center justify-center p-4">
       {/* Main Container */}
       <div className="w-full max-w-6xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-8 items-center">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
           
           {/* Left Side - Branding */}
-          <div className="text-center lg:text-left">
-            <div className="mb-6">
-              <span className="text-xs font-bold tracking-widest text-gray-600 uppercase">
+          <div className="text-center lg:text-left text-white">
+            <div className="mb-8">
+              <span className="text-sm font-semibold tracking-widest text-blue-100 uppercase">
                 CHILD MONITORING SYSTEM
               </span>
             </div>
             
-            <div className="flex items-center justify-center lg:justify-start space-x-3 mb-6">
-              <div className="w-14 h-14 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Shield className="w-7 h-7 text-white" />
+            <div className="flex items-center justify-center lg:justify-start space-x-4 mb-8">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg border border-white/30">
+                <Shield className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Smart Child</h1>
-                <p className="text-gray-700">Monitoring System</p>
+                <h1 className="text-4xl font-bold text-white">Smart Child</h1>
+                <p className="text-blue-100 text-lg">Monitoring System</p>
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-                An toàn cho con yêu của bạn
-              </span>
+            <h2 className="text-3xl font-bold text-white mb-6 leading-tight">
+              An toàn cho con yêu của bạn
             </h2>
-            <p className="text-gray-700 leading-relaxed">
+            <p className="text-blue-100 leading-relaxed text-lg">
               Công nghệ AI tiên tiến kết hợp camera thông minh, mang đến sự yên tâm hoàn toàn cho phụ huynh trong việc bảo vệ và chăm sóc trẻ em.
             </p>
           </div>
@@ -72,15 +70,15 @@ const LoginPage: React.FC = () => {
           <div className="flex justify-center lg:justify-end">
             <div className="w-full max-w-md">
               {/* Login Card */}
-              <div className="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
+              <div className="bg-white rounded-3xl p-10 shadow-2xl border border-gray-100">
 
                 {/* Header */}
-                <div className="text-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Đăng nhập</h2>
-                  <p className="text-gray-600">Chào mừng trở lại!</p>
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-3">Đăng nhập</h2>
+                  <p className="text-gray-600 text-lg">Chào mừng trở lại!</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Success Message */}
                   {successMessage && (
                     <div className="bg-green-50 border border-green-200 rounded-lg p-3">
@@ -115,7 +113,7 @@ const LoginPage: React.FC = () => {
 
                   {/* Email Input */}
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                       Email
                     </label>
                     <input
@@ -123,7 +121,7 @@ const LoginPage: React.FC = () => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
                       placeholder="admin@example.com"
                       required
                     />
@@ -131,7 +129,7 @@ const LoginPage: React.FC = () => {
 
                   {/* Password Input */}
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                       Mật khẩu
                     </label>
                     <div className="relative">
@@ -140,16 +138,16 @@ const LoginPage: React.FC = () => {
                         type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
+                        className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 placeholder-gray-500"
                         placeholder="admin123"
                         required
                       />
                       <button
                         type="button"
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
                   </div>
@@ -158,7 +156,7 @@ const LoginPage: React.FC = () => {
                   <div className="text-right">
                     <Link 
                       to="/forgot-password" 
-                      className="text-sm text-amber-600 hover:text-amber-700 font-medium"
+                      className="text-sm text-blue-600 hover:text-blue-700 font-semibold transition-colors"
                     >
                       Quên mật khẩu?
                     </Link>
@@ -168,11 +166,11 @@ const LoginPage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-lg"
                   >
                     {loading ? (
                       <div className="flex items-center justify-center space-x-2">
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                         <span>Đang đăng nhập...</span>
                       </div>
                     ) : (
@@ -182,19 +180,19 @@ const LoginPage: React.FC = () => {
                 </form>
 
                 {/* Demo Accounts */}
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <p className="text-xs text-gray-500 text-center mb-3">Tài khoản demo:</p>
-                  <div className="space-y-1 text-xs">
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <p className="text-sm text-gray-500 text-center mb-4 font-medium">Tài khoản demo:</p>
+                  <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-orange-600 font-medium">Admin:</span>
+                      <span className="text-blue-600 font-semibold">Admin:</span>
                       <span className="text-gray-600">admin@example.com / admin123</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-blue-600 font-medium">Parent:</span>
+                      <span className="text-blue-600 font-semibold">Parent:</span>
                       <span className="text-gray-600">parent@example.com / parent123</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-green-600 font-medium">Teacher:</span>
+                      <span className="text-blue-600 font-semibold">Teacher:</span>
                       <span className="text-gray-600">school@example.com / school123</span>
                     </div>
                   </div>

@@ -21,9 +21,13 @@ import ParentNotifications from './pages/parent/ParentNotifications'
 // Teacher Pages
 import TeacherDashboard from './pages/teacher/TeacherDashboard'
 import TeacherStudentManagement from './pages/teacher/TeacherStudentManagement'
-import TeacherAttendanceCamera from './pages/teacher/TeacherAttendanceCamera'
 import TeacherMessages from './pages/teacher/TeacherMessages'
 import TeacherSettings from './pages/teacher/TeacherSettings'
+import TeacherReports from './pages/teacher/TeacherReports'
+import TeacherLiveView from './pages/teacher/TeacherLiveView'
+import TeacherManagement from './pages/teacher/TeacherManagement'
+import TeacherClassManagement from './pages/teacher/TeacherClassManagement'
+import CameraManagement from './pages/teacher/CameraManagement'
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -63,10 +67,14 @@ function App() {
           {/* Teacher Routes */}
           <Route path="/teacher" element={<ProtectedRoute role="teacher" />}>
             <Route index element={<TeacherDashboard />} />
+            <Route path="classes" element={<TeacherClassManagement />} />
             <Route path="students" element={<TeacherStudentManagement />} />
-            <Route path="attendance" element={<TeacherAttendanceCamera />} />
+            <Route path="teachers" element={<TeacherManagement />} />
+            <Route path="cameras" element={<CameraManagement />} />
             <Route path="messages" element={<TeacherMessages />} />
+            <Route path="reports" element={<TeacherReports />} />
             <Route path="settings" element={<TeacherSettings />} />
+            <Route path="live-view" element={<TeacherLiveView />} />
           </Route>
 
           {/* Admin Routes */}

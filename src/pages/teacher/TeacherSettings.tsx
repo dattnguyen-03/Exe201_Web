@@ -104,13 +104,11 @@ const TeacherSettings: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{
-      background: 'linear-gradient(135deg, #f4f1ea 0%, #e8dcc6 50%, #d4c2a0 100%)'
-    }}>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       {/* Header */}
-      <div className="glass-card mx-6 pt-6 mb-8">
+      <div className="bg-white/80 backdrop-blur-xl border-b border-blue-200/50 shadow-sm mx-6 pt-6 mb-8 rounded-2xl">
         <div className="flex items-center gap-4 p-6">
-          <div className="bg-gradient-to-r from-amber-600 to-orange-600 p-3 rounded-2xl">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-2xl">
             <SettingsIcon className="h-8 w-8 text-white" />
           </div>
           <div>
@@ -121,7 +119,7 @@ const TeacherSettings: React.FC = () => {
       </div>
 
       <div className="mx-6 mb-8">
-        <div className="glass-card p-6">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
           {/* Tabs */}
           <div className="flex space-x-1 mb-8 bg-gray-100 p-1 rounded-2xl">
             {tabs.map((tab) => {
@@ -132,7 +130,7 @@ const TeacherSettings: React.FC = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold transition-all duration-300 ${
                     activeTab === tab.id
-                      ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg'
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
                       : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
                   }`}
                 >
@@ -157,7 +155,7 @@ const TeacherSettings: React.FC = () => {
                     type="text"
                     value={profile.name}
                     onChange={(e) => setProfile({...profile, name: e.target.value})}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
@@ -181,7 +179,7 @@ const TeacherSettings: React.FC = () => {
                     type="email"
                     value={profile.email}
                     onChange={(e) => setProfile({...profile, email: e.target.value})}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
@@ -193,7 +191,7 @@ const TeacherSettings: React.FC = () => {
                     type="tel"
                     value={profile.phone}
                     onChange={(e) => setProfile({...profile, phone: e.target.value})}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
@@ -205,14 +203,14 @@ const TeacherSettings: React.FC = () => {
                     type="text"
                     value={profile.department}
                     onChange={(e) => setProfile({...profile, department: e.target.value})}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
               </div>
 
               <button
                 onClick={handleSaveProfile}
-                className="bg-gradient-to-r from-amber-600 to-orange-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2"
               >
                 <Save className="h-5 w-5" />
                 Lưu Thay Đổi
@@ -249,7 +247,7 @@ const TeacherSettings: React.FC = () => {
                         })}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
                   </div>
                 ))}
@@ -257,7 +255,7 @@ const TeacherSettings: React.FC = () => {
 
               <button
                 onClick={handleSaveNotifications}
-                className="bg-gradient-to-r from-amber-600 to-orange-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2"
               >
                 <Save className="h-5 w-5" />
                 Lưu Cài Đặt
@@ -339,7 +337,7 @@ const TeacherSettings: React.FC = () => {
 
                   <button
                     onClick={handleChangePassword}
-                    className="bg-gradient-to-r from-amber-600 to-orange-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2"
                   >
                     <Lock className="h-5 w-5" />
                     Đổi Mật Khẩu
@@ -370,7 +368,7 @@ const TeacherSettings: React.FC = () => {
                   <select
                     value={security.sessionTimeout}
                     onChange={(e) => setSecurity({...security, sessionTimeout: parseInt(e.target.value)})}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value={15}>15 phút</option>
                     <option value={30}>30 phút</option>
@@ -382,7 +380,7 @@ const TeacherSettings: React.FC = () => {
 
               <button
                 onClick={handleSaveSecurity}
-                className="bg-gradient-to-r from-amber-600 to-orange-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2"
               >
                 <Save className="h-5 w-5" />
                 Lưu Cài Đặt
@@ -400,17 +398,17 @@ const TeacherSettings: React.FC = () => {
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Quyền Truy Cập Dữ Liệu</h3>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <Camera className="h-5 w-5 text-amber-600" />
+                      <Camera className="h-5 w-5 text-blue-600" />
                       <span className="text-gray-700">Truy cập camera giám sát</span>
                       <span className="ml-auto text-green-600 font-semibold">Được phép</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <User className="h-5 w-5 text-amber-600" />
+                      <User className="h-5 w-5 text-blue-600" />
                       <span className="text-gray-700">Xem thông tin học sinh</span>
                       <span className="ml-auto text-green-600 font-semibold">Được phép</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Bell className="h-5 w-5 text-amber-600" />
+                      <Bell className="h-5 w-5 text-blue-600" />
                       <span className="text-gray-700">Gửi thông báo</span>
                       <span className="ml-auto text-green-600 font-semibold">Được phép</span>
                     </div>
@@ -423,7 +421,7 @@ const TeacherSettings: React.FC = () => {
                     Dữ liệu của bạn được bảo vệ theo chính sách bảo mật của trường. 
                     Thông tin chỉ được chia sẻ với các bên có thẩm quyền.
                   </p>
-                  <button className="text-amber-600 font-semibold hover:text-amber-700">
+                  <button className="text-blue-600 font-semibold hover:text-blue-700">
                     Xem chính sách bảo mật →
                   </button>
                 </div>
