@@ -1,48 +1,122 @@
-import React from 'react'
-import { User, MapPin, Activity, Clock, AlertTriangle, Camera, TrendingUp, Shield } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { User, MapPin, Activity, Clock, AlertTriangle, Camera, TrendingUp, Shield, Loader2 } from 'lucide-react'
+import { parentApiService, DashboardData, Alert, Child } from '../../services/parentApiService'
+import { authService } from '../../services/authService'
 
 const ParentDashboard: React.FC = () => {
-  const childData = {
-    name: 'Nguyễn Minh An',
-    age: 5,
-    class: 'Lớp Mẫu Giáo A',
-    currentLocation: 'Phòng học',
-    currentActivity: 'Đang vẽ tranh',
-    lastUpdate: '2 phút trước'
-  }
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState(authService.getUser())
 
-  const todayStats = {
-    totalAlerts: 2,
-    resolvedAlerts: 1,
-    activeTime: '6h 30m',
-    behaviorScore: 85
-  }
-
-  const recentAlerts = [
-    {
-      id: 1,
-      type: 'Leo trèo',
-      severity: 'Cao',
-      time: '10:30',
-      location: 'Sân chơi',
-      status: 'Đã xử lý',
-      description: 'Bé đã leo lên thiết bị chơi không an toàn'
-    },
-    {
-      id: 2,
-      type: 'Ra khỏi vùng an toàn',
-      severity: 'Trung bình',
-      time: '14:15',
-      location: 'Hành lang',
-      status: 'Đang xử lý',
-      description: 'Bé đã di chuyển ra ngoài khu vực được phép'
+  // Load dashboard data
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        setLoading(true)
+        const data = await parentApiService.getDashboard()
+        setDashboardData(data)
+        setError(null)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Có lỗi xảy ra')
+        console.error('Error loading dashboard:', err)
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
 
+    loadDashboard()
+  }, [])
+
+  // Mock data for system status (không có API cho phần này)
   const systemStatus = {
     cameras: { total: 6, active: 6, status: 'Hoạt động tốt' },
     ai: { status: 'Đang hoạt động', accuracy: 96 },
     connection: { status: 'Ổn định', signal: 98 }
+  }
+
+  // Helper functions
+  const getSeverityText = (severity: number): string => {
+    if (severity >= 3) return 'Cao'
+    if (severity >= 2) return 'Trung bình'
+    return 'Thấp'
+  }
+
+  const getSeverityColor = (severity: number): string => {
+    if (severity >= 3) return 'bg-red-100 text-red-700'
+    if (severity >= 2) return 'bg-yellow-100 text-yellow-700'
+    return 'bg-gray-100 text-gray-700'
+  }
+
+  const formatTime = (dateString: string): string => {
+    const date = new Date(dateString)
+    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('vi-VN')
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <AlertTriangle className="w-8 h-8 mx-auto mb-4 text-red-600" />
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="btn-primary"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-600">Không có dữ liệu</p>
+      </div>
+    )
+  }
+
+  // Get first child for display (hoặc có thể hiển thị tất cả)
+  const firstChild = dashboardData.children[0]
+  const childData = firstChild ? {
+    name: firstChild.full_name,
+    age: new Date().getFullYear() - new Date(firstChild.date_of_birth).getFullYear(),
+    class: 'Lớp học', // Cần lấy từ API class
+    currentLocation: 'Phòng học',
+    currentActivity: 'Đang hoạt động',
+    lastUpdate: '2 phút trước'
+  } : {
+    name: 'Chưa có thông tin',
+    age: 0,
+    class: 'Chưa xác định',
+    currentLocation: 'Chưa xác định',
+    currentActivity: 'Chưa xác định',
+    lastUpdate: 'Chưa cập nhật'
+  }
+
+  const todayStats = {
+    totalAlerts: dashboardData.recent_alerts_count,
+    resolvedAlerts: dashboardData.recent_alerts.filter(alert => alert.acknowledged).length,
+    activeTime: '6h 30m', // Mock data
+    behaviorScore: 85 // Mock data
   }
 
   return (
@@ -144,32 +218,36 @@ const ParentDashboard: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {recentAlerts.map((alert) => (
-              <div key={alert.id} className="p-4 bg-amber-25 rounded-lg hover:bg-amber-50 transition-colors">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className="font-medium text-gray-900">{alert.type}</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${alert.severity === 'Cao' ? 'bg-red-100 text-red-700' :
-                          alert.severity === 'Trung bình' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-gray-100 text-gray-700'
-                        }`}>
-                        {alert.severity}
-                      </span>
+            {dashboardData.recent_alerts.length > 0 ? (
+              dashboardData.recent_alerts.map((alert) => (
+                <div key={alert.id} className="p-4 bg-amber-25 rounded-lg hover:bg-amber-50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-medium text-gray-900">{alert.alert_type}</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(alert.severity)}`}>
+                          {getSeverityText(alert.severity)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-700 mb-2">Cảnh báo từ hệ thống AI</p>
+                      <div className="flex items-center space-x-4 text-xs text-gray-600">
+                        <span>🕐 {formatTime(alert.created_at)}</span>
+                        <span>📅 {formatDate(alert.created_at)}</span>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-700 mb-2">{alert.description}</p>
-                    <div className="flex items-center space-x-4 text-xs text-gray-600">
-                      <span>🕐 {alert.time}</span>
-                      <span>📍 {alert.location}</span>
+                    <div className={`ml-3 px-2 py-1 rounded-full text-xs font-medium ${alert.acknowledged ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                      }`}>
+                      {alert.acknowledged ? 'Đã xử lý' : 'Chờ xử lý'}
                     </div>
-                  </div>
-                  <div className={`ml-3 px-2 py-1 rounded-full text-xs font-medium ${alert.status === 'Đã xử lý' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                    }`}>
-                    {alert.status}
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                <p>Không có cảnh báo nào</p>
               </div>
-            ))}
+            )}
           </div>
 
           <button className="w-full mt-4 btn-secondary">

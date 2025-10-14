@@ -1,63 +1,117 @@
-import React, { useState } from 'react'
-import { AlertTriangle, Clock, MapPin, Camera, Filter, CheckCircle, X, Search } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { AlertTriangle, Clock, MapPin, Camera, Filter, CheckCircle, X, Search, Loader2 } from 'lucide-react'
+import { parentApiService, Alert } from '../../services/parentApiService'
+import { authService } from '../../services/authService'
 
 const ParentAlertsCenter: React.FC = () => {
   const [filterType, setFilterType] = useState('all')
   const [filterDate, setFilterDate] = useState('today')
+  const [alerts, setAlerts] = useState<Alert[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [acknowledging, setAcknowledging] = useState<number | null>(null)
 
-  const alerts = [
-    {
-      id: 2,
-      type: 'Ra khỏi vùng an toàn',
-      severity: 'Trung bình',
-      time: '9:45',
-      date: '2024-01-15',
-      location: 'Hành lang',
-      description: 'Bé đã di chuyển ra ngoài khu vực được phép trong giờ học',
-      status: 'confirmed',
-      hasMedia: false,
-      confirmed: true
-    },
-    {
-      id: 3,
-      type: 'Nguy cơ va chạm',
-      severity: 'Cao',
-      time: '9:15',
-      date: '2024-01-15',
-      location: 'Phòng học A',
-      description: 'Phát hiện nguy cơ va chạm với bạn khác trong lớp học',
-      status: 'resolved',
-      hasMedia: true,
-      confirmed: false
-    },
-    
-  ]
+  // Load alerts data
+  useEffect(() => {
+    const loadAlerts = async () => {
+      try {
+        setLoading(true)
+        const data = await parentApiService.getAlerts()
+        setAlerts(data)
+        setError(null)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Có lỗi xảy ra')
+        console.error('Error loading alerts:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'Cao': return 'bg-red-100 text-red-700 border-red-200'
-      case 'Trung bình': return 'bg-yellow-100 text-yellow-700 border-yellow-200'
-      case 'Thấp': return 'bg-gray-100 text-gray-700 border-gray-200'
-      default: return 'bg-gray-100 text-gray-700 border-gray-200'
+    loadAlerts()
+  }, [])
+
+  // Handle acknowledge alert
+  const handleAcknowledgeAlert = async (alertId: number) => {
+    try {
+      setAcknowledging(alertId)
+      await parentApiService.acknowledgeAlert(alertId)
+      // Update local state
+      setAlerts(prev => prev.map(alert => 
+        alert.id === alertId ? { ...alert, acknowledged: true } : alert
+      ))
+    } catch (err) {
+      console.error('Error acknowledging alert:', err)
+      alert('Có lỗi khi xác nhận cảnh báo')
+    } finally {
+      setAcknowledging(null)
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-orange-100 text-orange-700 border-orange-200'
-      case 'confirmed': return 'bg-blue-100 text-blue-700 border-blue-200'
-      case 'resolved': return 'bg-green-100 text-green-700 border-green-200'
-      default: return 'bg-gray-100 text-gray-700 border-gray-200'
-    }
+  // Helper functions
+  const getSeverityText = (severity: number): string => {
+    if (severity >= 3) return 'Cao'
+    if (severity >= 2) return 'Trung bình'
+    return 'Thấp'
   }
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending': return 'Chờ xử lý'
-      case 'confirmed': return 'Đã xác nhận'
-      case 'resolved': return 'Đã giải quyết'
-      default: return status
-    }
+  const getSeverityColor = (severity: number) => {
+    if (severity >= 3) return 'bg-red-100 text-red-700 border-red-200'
+    if (severity >= 2) return 'bg-yellow-100 text-yellow-700 border-yellow-200'
+    return 'bg-gray-100 text-gray-700 border-gray-200'
+  }
+
+  const getStatusColor = (acknowledged: boolean) => {
+    return acknowledged ? 'bg-green-100 text-green-700 border-green-200' : 'bg-orange-100 text-orange-700 border-orange-200'
+  }
+
+  const getStatusText = (acknowledged: boolean) => {
+    return acknowledged ? 'Đã xử lý' : 'Chờ xử lý'
+  }
+
+  const formatTime = (dateString: string): string => {
+    const date = new Date(dateString)
+    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('vi-VN')
+  }
+
+  // Calculate stats
+  const stats = {
+    high: alerts.filter(alert => alert.severity >= 3).length,
+    medium: alerts.filter(alert => alert.severity === 2).length,
+    low: alerts.filter(alert => alert.severity === 1).length,
+    resolved: alerts.filter(alert => alert.acknowledged).length
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Đang tải cảnh báo...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <AlertTriangle className="w-8 h-8 mx-auto mb-4 text-red-600" />
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="btn-primary"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -72,26 +126,26 @@ const ParentAlertsCenter: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="card bg-gradient-to-br from-red-50 to-red-100 border-red-200">
           <div className="text-center">
-            <div className="text-2xl font-bold text-red-700">3</div>
+            <div className="text-2xl font-bold text-red-700">{stats.high}</div>
             <div className="text-sm text-red-600">Mức độ cao</div>
           </div>
         </div>
         <div className="card bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
           <div className="text-center">
-            <div className="text-2xl font-bold text-yellow-700">5</div>
+            <div className="text-2xl font-bold text-yellow-700">{stats.medium}</div>
             <div className="text-sm text-yellow-600">Mức độ trung bình</div>
           </div>
         </div>
         <div className="card bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200">
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-700">2</div>
+            <div className="text-2xl font-bold text-gray-700">{stats.low}</div>
             <div className="text-sm text-gray-600">Mức độ thấp</div>
           </div>
         </div>
         <div className="card bg-gradient-to-br from-green-50 to-green-100 border-green-200">
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-700">8</div>
-            <div className="text-sm text-green-600">Đã xử lý hôm nay</div>
+            <div className="text-2xl font-bold text-green-700">{stats.resolved}</div>
+            <div className="text-sm text-green-600">Đã xử lý</div>
           </div>
         </div>
       </div>
@@ -159,82 +213,78 @@ const ParentAlertsCenter: React.FC = () => {
 
       {/* Alerts List */}
       <div className="space-y-4">
-        {alerts.map((alert) => (
-          <div key={alert.id} className="card hover:shadow-xl transition-all duration-200">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-3">
-                  <AlertTriangle className={`w-5 h-5 ${alert.severity === 'Cao' ? 'text-red-500' :
-                      alert.severity === 'Trung bình' ? 'text-yellow-500' :
-                        'text-gray-500'
-                    }`} />
-                  <h4 className="text-lg font-bold text-gray-900">{alert.type}</h4>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getSeverityColor(alert.severity)}`}>
-                    {alert.severity}
-                  </span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(alert.status)}`}>
-                    {getStatusText(alert.status)}
-                  </span>
-                </div>
-
-                <p className="text-gray-600 mb-3 leading-relaxed">{alert.description}</p>
-
-                <div className="flex items-center space-x-6 text-sm text-gray-500">
-                  <div className="flex items-center space-x-2">
-                    <Clock className="w-4 h-4" />
-                    <span>{alert.time} - {new Date(alert.date).toLocaleDateString('vi-VN')}</span>
+        {alerts.length > 0 ? (
+          alerts.map((alert) => (
+            <div key={alert.id} className="card hover:shadow-xl transition-all duration-200">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <AlertTriangle className={`w-5 h-5 ${alert.severity >= 3 ? 'text-red-500' :
+                        alert.severity >= 2 ? 'text-yellow-500' :
+                          'text-gray-500'
+                      }`} />
+                    <h4 className="text-lg font-bold text-gray-900">{alert.alert_type}</h4>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getSeverityColor(alert.severity)}`}>
+                      {getSeverityText(alert.severity)}
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(alert.acknowledged)}`}>
+                      {getStatusText(alert.acknowledged)}
+                    </span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="w-4 h-4" />
-                    <span>{alert.location}</span>
-                  </div>
-                  {alert.hasMedia && (
+
+                  <p className="text-gray-600 mb-3 leading-relaxed">
+                    Cảnh báo từ hệ thống AI giám sát
+                  </p>
+
+                  <div className="flex items-center space-x-6 text-sm text-gray-500">
                     <div className="flex items-center space-x-2">
-                      <Camera className="w-4 h-4" />
-                      <span>Có hình ảnh</span>
+                      <Clock className="w-4 h-4" />
+                      <span>{formatTime(alert.created_at)} - {formatDate(alert.created_at)}</span>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2 ml-4">
-                {alert.hasMedia && (
-                  <button className="btn-secondary flex items-center space-x-2">
-                    <Camera className="w-4 h-4" />
-                    <span>Xem hình ảnh</span>
-                  </button>
-                )}
-                <button className="btn-primary">
-                  Xem chi tiết
-                </button>
-              </div>
-            </div>
-
-            {alert.status === 'pending' && (
-              <div className="mt-4 pt-4 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-xl">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm font-medium text-gray-700">Xác nhận cảnh báo và thêm ghi chú:</p>
-                  <div className="flex items-center space-x-2">
-                    <button className="flex items-center space-x-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors">
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Xác nhận đúng</span>
-                    </button>
-                    <button className="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
-                      <X className="w-4 h-4" />
-                      <span>Cảnh báo sai</span>
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="w-4 h-4" />
+                      <span>Camera ID: {alert.camera_id || 'N/A'}</span>
+                    </div>
                   </div>
                 </div>
-                <textarea
-                  className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Thêm ghi chú về cảnh báo này..."
-                  rows={2}
-                  title="Thêm ghi chú về cảnh báo"
-                />
+
+                <div className="flex items-center space-x-2 ml-4">
+                  <button className="btn-primary">
+                    Xem chi tiết
+                  </button>
+                </div>
               </div>
-            )}
+
+              {!alert.acknowledged && (
+                <div className="mt-4 pt-4 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-medium text-gray-700">Xác nhận cảnh báo:</p>
+                    <div className="flex items-center space-x-2">
+                      <button 
+                        onClick={() => handleAcknowledgeAlert(alert.id)}
+                        disabled={acknowledging === alert.id}
+                        className="flex items-center space-x-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors disabled:opacity-50"
+                      >
+                        {acknowledging === alert.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4" />
+                        )}
+                        <span>Xác nhận đã xử lý</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-12">
+            <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Không có cảnh báo nào</h3>
+            <p className="text-gray-500">Tất cả đều an toàn! 🎉</p>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Quick Actions */}

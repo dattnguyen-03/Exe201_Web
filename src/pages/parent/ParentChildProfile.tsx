@@ -1,13 +1,40 @@
-import React, { useState } from 'react'
-import { User, Edit, Camera, Calendar, Heart, Award, MapPin, Phone, Mail, X } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { User, Edit, Camera, Calendar, Heart, Award, MapPin, Phone, Mail, X, Loader2 } from 'lucide-react'
+import { parentApiService, Child } from '../../services/parentApiService'
+import { authService } from '../../services/authService'
 
 const ParentChildProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false)
+  const [children, setChildren] = useState<Child[]>([])
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState(authService.getUser())
 
-  const childProfile = {
-    name: 'Nguyễn Minh An',
-    age: 5,
-    birthDate: '15/03/2019',
+  // Load children data
+  useEffect(() => {
+    const loadChildren = async () => {
+      try {
+        setLoading(true)
+        const data = await parentApiService.getChildren()
+        setChildren(data)
+        if (data.length > 0) {
+          setSelectedChild(data[0])
+        }
+        setError(null)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Có lỗi xảy ra')
+        console.error('Error loading children:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadChildren()
+  }, [])
+
+  // Mock data for additional info (không có API cho phần này)
+  const additionalInfo = {
     class: 'Lớp Mẫu Giáo A',
     teacher: 'Cô Nguyễn Thị Lan',
     startDate: '01/09/2023',
@@ -22,6 +49,75 @@ const ParentChildProfile: React.FC = () => {
       { title: 'Bé ngoan nhất tuần', date: '15/10/2023', type: 'behavior' },
       { title: 'Giải nhất cuộc thi vẽ', date: '20/09/2023', type: 'creativity' }
     ]
+  }
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('vi-VN')
+  }
+
+  const calculateAge = (birthDate: string): number => {
+    const today = new Date()
+    const birth = new Date(birthDate)
+    let age = today.getFullYear() - birth.getFullYear()
+    const monthDiff = today.getMonth() - birth.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--
+    }
+    return age
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Đang tải thông tin con...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <User className="w-8 h-8 mx-auto mb-4 text-red-600" />
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="btn-primary"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!selectedChild) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <User className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có thông tin con</h3>
+          <p className="text-gray-500">Vui lòng liên hệ nhà trường để cập nhật thông tin</p>
+        </div>
+      </div>
+    )
+  }
+
+  const childProfile = {
+    name: selectedChild.full_name,
+    age: calculateAge(selectedChild.date_of_birth),
+    birthDate: formatDate(selectedChild.date_of_birth),
+    class: additionalInfo.class,
+    teacher: additionalInfo.teacher,
+    startDate: additionalInfo.startDate,
+    allergies: additionalInfo.allergies,
+    medicalNotes: additionalInfo.medicalNotes,
+    emergencyContacts: additionalInfo.emergencyContacts,
+    achievements: additionalInfo.achievements
   }
 
   return (
@@ -43,6 +139,34 @@ const ParentChildProfile: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Child Selector - nếu có nhiều con */}
+      {children.length > 1 && (
+        <div className="card">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Chọn con để xem thông tin</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {children.map((child) => (
+              <button
+                key={child.id}
+                onClick={() => setSelectedChild(child)}
+                className={`p-4 rounded-lg border-2 transition-all ${
+                  selectedChild?.id === child.id
+                    ? 'border-purple-500 bg-purple-50'
+                    : 'border-gray-200 hover:border-purple-300'
+                }`}
+              >
+                <div className="text-center">
+                  <User className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+                  <h4 className="font-medium text-gray-900">{child.full_name}</h4>
+                  <p className="text-sm text-gray-600">
+                    {calculateAge(child.date_of_birth)} tuổi
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Card */}

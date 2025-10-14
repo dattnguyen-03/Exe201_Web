@@ -37,14 +37,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const token = authService.getToken()
         
         if (savedUser && token) {
-          // Validate token with server
+          // Validate token (basic validation without server call)
           const isValid = await authService.validateToken(token)
           if (isValid) {
             setUser(savedUser)
           } else {
             // Token is invalid, clear auth data
+            console.log('Token invalid, clearing auth data')
             authService.clearAuth()
           }
+        } else {
+          // No saved user or token
+          console.log('No saved user or token found')
         }
       } catch (error) {
         console.error('Error initializing auth:', error)
