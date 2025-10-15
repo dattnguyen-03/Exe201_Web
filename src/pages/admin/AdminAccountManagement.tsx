@@ -26,25 +26,25 @@ const AdminAccountManagement: React.FC = () => {
   const accounts = [
     {
       id: 1,
-      name: 'Nguyễn Thị Lan',
-      email: 'lan.nguyen@truongmam.edu.vn',
+      name: 'Trường Mầm Non Hoa Hồng',
+      email: 'truongmamnon@hoahong.edu.vn',
       phone: '0901 234 567',
-      role: 'teacher',
+      role: 'school',
       status: 'active',
-      class: 'Lớp Mẫu Giáo A',
+      address: '123 Đường ABC, Quận 1, TP.HCM',
       lastLogin: '2024-01-15 14:30',
-      permissions: ['view_class', 'manage_students', 'send_alerts']
+      permissions: ['manage_teachers', 'manage_classes', 'manage_students']
     },
     {
       id: 2,
-      name: 'Trần Văn Minh',
-      email: 'minh.tran@truongmam.edu.vn',
+      name: 'Trường Mầm Non Bình Minh',
+      email: 'truongmamnon@binhminh.edu.vn',
       phone: '0902 345 678',
-      role: 'teacher',
+      role: 'school',
       status: 'active',
-      class: 'Lớp Mẫu Giáo B',
+      address: '456 Đường XYZ, Quận 2, TP.HCM',
       lastLogin: '2024-01-15 13:45',
-      permissions: ['view_class', 'manage_students']
+      permissions: ['manage_teachers', 'manage_classes', 'manage_students']
     },
     {
       id: 3,
@@ -59,20 +59,21 @@ const AdminAccountManagement: React.FC = () => {
     },
     {
       id: 4,
-      name: 'Phạm Văn Dũng',
-      email: 'dung.pham@truongmam.edu.vn',
+      name: 'Nguyễn Văn Nam',
+      email: 'nam.nguyen@gmail.com',
       phone: '0904 567 890',
-      role: 'admin',
+      role: 'parent',
       status: 'active',
-      lastLogin: '2024-01-15 09:15',
-      permissions: ['full_access']
+      children: ['Nguyễn Thị Mai'],
+      lastLogin: '2024-01-15 16:20',
+      permissions: ['view_child', 'receive_alerts']
     }
   ]
 
   const roleStats = {
     total: accounts.length,
-    admin: accounts.filter(acc => acc.role === 'admin').length,
-    teacher: accounts.filter(acc => acc.role === 'teacher').length,
+    admin: 1, // Admin hiện tại
+    school: accounts.filter(acc => acc.role === 'school').length,
     parent: accounts.filter(acc => acc.role === 'parent').length,
     active: accounts.filter(acc => acc.status === 'active').length
   }
@@ -80,7 +81,7 @@ const AdminAccountManagement: React.FC = () => {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'admin': return 'bg-orange-100 text-orange-700 border-orange-200'
-      case 'teacher': return 'bg-green-100 text-green-700 border-green-200'
+      case 'school': return 'bg-blue-100 text-blue-700 border-blue-200'
       case 'parent': return 'bg-amber-100 text-amber-700 border-amber-200'
       default: return 'bg-gray-100 text-gray-700 border-gray-200'
     }
@@ -89,7 +90,7 @@ const AdminAccountManagement: React.FC = () => {
   const getRoleText = (role: string) => {
     switch (role) {
       case 'admin': return 'Quản trị viên'
-      case 'teacher': return 'Giáo viên'
+      case 'school': return 'Trường học'
       case 'parent': return 'Phụ huynh'
       default: return role
     }
@@ -141,7 +142,7 @@ const AdminAccountManagement: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold mb-2">👥 Quản lý tài khoản</h1>
-            <p className="text-amber-100">Quản lý tài khoản giáo viên, phụ huynh và phân quyền</p>
+            <p className="text-amber-100">Quản lý tài khoản trường học, phụ huynh và phân quyền</p>
           </div>
           <button 
             className="bg-white text-amber-600 px-4 py-2 rounded-lg font-medium hover:bg-amber-50 transition-colors flex items-center space-x-2"
@@ -167,10 +168,10 @@ const AdminAccountManagement: React.FC = () => {
             <div className="text-sm text-orange-600">Quản trị viên</div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-green-25 to-green-50 border-green-200">
+        <div className="card bg-gradient-to-br from-blue-25 to-blue-50 border-blue-200">
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-700">{roleStats.teacher}</div>
-            <div className="text-sm text-green-600">Giáo viên</div>
+            <div className="text-2xl font-bold text-blue-700">{roleStats.school}</div>
+            <div className="text-sm text-blue-600">Trường học</div>
           </div>
         </div>
         <div className="card bg-gradient-to-br from-yellow-25 to-yellow-50 border-yellow-200">
@@ -187,56 +188,6 @@ const AdminAccountManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Management Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Teacher Management Card */}
-        <div className="card border-2 border-amber-200 hover:border-amber-400 hover:shadow-lg transition-all duration-300 cursor-pointer group"
-             onClick={() => navigate('/admin/teachers')}>
-          <div className="text-center p-6">
-            <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-amber-200 transition-colors">
-              <UserCheck className="w-8 h-8 text-amber-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">👨‍🏫 Quản lý giáo viên</h3>
-            <p className="text-gray-700 mb-4">Thêm, chỉnh sửa thông tin giáo viên và phân công lớp học</p>
-            <button className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-3 rounded-lg font-medium hover:from-amber-700 hover:to-orange-700 transition-colors flex items-center justify-center space-x-2">
-              <span>Quản lý giáo viên</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Parent Management Card */}
-        <div className="card border-2 border-green-200 hover:border-green-400 hover:shadow-lg transition-all duration-300 cursor-pointer group"
-             onClick={() => navigate('/admin/parents')}>
-          <div className="text-center p-6">
-            <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors">
-              <Users className="w-8 h-8 text-green-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">👨‍👩‍👧‍👦 Quản lý phụ huynh</h3>
-            <p className="text-gray-600 mb-4">Thêm tài khoản phụ huynh và liên kết với học sinh</p>
-            <button className="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2">
-              <span>Quản lý phụ huynh</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Permission Management Card */}
-        <div className="card border-2 border-purple-200 hover:border-purple-400 hover:shadow-lg transition-all duration-300 cursor-pointer group"
-             onClick={() => navigate('/admin/permissions')}>
-          <div className="text-center p-6">
-            <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
-              <Shield className="w-8 h-8 text-purple-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">🔐 Phân quyền</h3>
-            <p className="text-gray-600 mb-4">Thiết lập quyền truy cập cho từng vai trò</p>
-            <button className="w-full bg-purple-600 text-white py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2">
-              <span>Cài đặt quyền</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Filters and Search */}
       <div className="card">
@@ -270,7 +221,7 @@ const AdminAccountManagement: React.FC = () => {
             >
               <option value="all">Tất cả vai trò</option>
               <option value="admin">Quản trị viên</option>
-              <option value="teacher">Giáo viên</option>
+              <option value="school">Trường học</option>
               <option value="parent">Phụ huynh</option>
             </select>
           </div>
@@ -302,7 +253,7 @@ const AdminAccountManagement: React.FC = () => {
                   <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
                     {account.role === 'admin' ? (
                       <Shield className="w-6 h-6 text-purple-600" />
-                    ) : account.role === 'teacher' ? (
+                    ) : account.role === 'school' ? (
                       <UserCheck className="w-6 h-6 text-blue-600" />
                     ) : (
                       <Users className="w-6 h-6 text-green-600" />
@@ -335,9 +286,9 @@ const AdminAccountManagement: React.FC = () => {
                       </div>
                     </div>
 
-                    {account.class && (
+                    {account.class && account.role === 'school' && (
                       <div className="mt-2">
-                        <span className="text-sm text-blue-600 font-medium">Lớp: {account.class}</span>
+                        <span className="text-sm text-blue-600 font-medium">Địa chỉ: {account.class}</span>
                       </div>
                     )}
 
@@ -371,32 +322,6 @@ const AdminAccountManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <h4 className="font-bold text-blue-900 mb-3">👨‍🏫 Quản lý giáo viên</h4>
-          <p className="text-sm text-blue-700 mb-4">Thêm, chỉnh sửa thông tin giáo viên và phân công lớp học</p>
-          <button className="w-full btn-primary bg-blue-600 hover:bg-blue-700">
-            Quản lý giáo viên
-          </button>
-        </div>
-
-        <div className="card bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <h4 className="font-bold text-green-900 mb-3">👨‍👩‍👧‍👦 Quản lý phụ huynh</h4>
-          <p className="text-sm text-green-700 mb-4">Thêm tài khoản phụ huynh và liên kết với học sinh</p>
-          <button className="w-full btn-primary bg-green-600 hover:bg-green-700">
-            Quản lý phụ huynh
-          </button>
-        </div>
-
-        <div className="card bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-          <h4 className="font-bold text-purple-900 mb-3">🔐 Phân quyền</h4>
-          <p className="text-sm text-purple-700 mb-4">Thiết lập quyền truy cập cho từng vai trò</p>
-          <button className="w-full btn-primary bg-purple-600 hover:bg-purple-700">
-            Cài đặt quyền
-          </button>
-        </div>
-      </div>
 
       {/* Modal thêm tài khoản */}
       {showAddAccountModal && (
@@ -467,28 +392,23 @@ const AdminAccountManagement: React.FC = () => {
                     onChange={(e) => setNewAccount({ ...newAccount, role: e.target.value })}
                   >
                     <option value="">Chọn vai trò</option>
-                    <option value="admin">Quản trị viên</option>
-                    <option value="teacher">Giáo viên</option>
+                    <option value="school">Trường học</option>
                     <option value="parent">Phụ huynh</option>
                   </select>
                 </div>
 
-                {newAccount.role === 'teacher' && (
+                {newAccount.role === 'school' && (
                   <div>
                     <label className="block text-base font-medium text-gray-800 mb-3">
-                      Lớp phụ trách
+                      Địa chỉ trường
                     </label>
-                    <select
-                      className="w-full px-5 py-4 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200 bg-white/80 backdrop-blur-sm text-gray-900 text-base"
+                    <input
+                      type="text"
+                      className="w-full px-5 py-4 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200 bg-white/80 backdrop-blur-sm placeholder-gray-500 text-gray-900 text-base"
                       value={newAccount.class}
                       onChange={(e) => setNewAccount({ ...newAccount, class: e.target.value })}
-                    >
-                      <option value="">Chọn lớp</option>
-                      <option value="kg-a">Lớp Mẫu Giáo A</option>
-                      <option value="kg-b">Lớp Mẫu Giáo B</option>
-                      <option value="g1-a">Lớp Chồi A</option>
-                      <option value="g1-b">Lớp Chồi B</option>
-                    </select>
+                      placeholder="Nhập địa chỉ trường học"
+                    />
                   </div>
                 )}
 

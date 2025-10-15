@@ -15,6 +15,7 @@ import ParentAlertsCenter from './pages/parent/ParentAlertsCenter'
 import ParentBehaviorReports from './pages/parent/ParentBehaviorReports'
 import ParentDangerZoneMap from './pages/parent/ParentDangerZoneMap'
 import ParentChildProfile from './pages/parent/ParentChildProfile'
+import ParentPackageManagement from './pages/parent/ParentPackageManagement'
 import ParentAccountSettings from './pages/parent/ParentAccountSettings'
 import ParentNotifications from './pages/parent/ParentNotifications'
 
@@ -26,23 +27,24 @@ import TeacherLiveView from './pages/teacher/TeacherLiveView'
 import TeacherManagement from './pages/teacher/TeacherManagement'
 import TeacherClassManagement from './pages/teacher/TeacherClassManagement'
 import CameraManagement from './pages/teacher/CameraManagement'
+import SchoolPackageManagement from './pages/teacher/SchoolPackageManagement'
 
 // School Pages
 import SchoolSettings from './pages/teacher/SchoolSettings'
 
+// Payment Pages
+import PaymentPage from './pages/PaymentPage'
+import PaymentDemoPage from './pages/PaymentDemoPage'
+import PackageSelectionPage from './pages/PackageSelectionPage'
+import PaymentSuccessPage from './pages/PaymentSuccessPage'
+import PaymentCancelPage from './pages/PaymentCancelPage'
+
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
-import AdminClassManagement from './pages/admin/AdminClassManagement'
 import AdminAccountManagement from './pages/admin/AdminAccountManagement'
-import AdminTeacherManagement from './pages/admin/AdminTeacherManagement'
-import AdminParentManagement from './pages/admin/AdminParentManagement'
-import AdminPermissionManagement from './pages/admin/AdminPermissionManagement'
+import AdminPackageManagement from './pages/admin/AdminPackageManagement'
+import AdminPaymentManagement from './pages/admin/AdminPaymentManagement'
 import AdminReports from './pages/admin/AdminReports'
-import AdminLiveView from './pages/admin/AdminLiveView'
-import AdminCameraPlayback from './pages/admin/AdminCameraPlayback'
-import AdminAlertsCenter from './pages/admin/AdminAlertsCenter'
-import AdminDangerZoneManager from './pages/admin/AdminDangerZoneManager'
-import AdminCommunicationCenter from './pages/admin/AdminCommunicationCenter'
 function App() {
   return (
     <AuthProvider>
@@ -51,6 +53,12 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/packages" element={<PackageSelectionPage />} />
+          <Route path="/payment/package/:packageId" element={<PaymentPage />} />
+          <Route path="/payment/:paymentId" element={<PaymentPage />} />
+          <Route path="/payment/demo/:orderId" element={<PaymentDemoPage />} />
+          <Route path="/payment/success/:paymentId" element={<PaymentSuccessPage />} />
+          <Route path="/payment/cancel" element={<PaymentCancelPage />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
 
           {/* Parent Routes */}
@@ -59,10 +67,11 @@ function App() {
             <Route path="live-view" element={<ParentLiveView />} />
             <Route path="alerts" element={<ParentAlertsCenter />} />
             <Route path="reports" element={<ParentBehaviorReports />} />
-            <Route path="danger-zones" element={<ParentDangerZoneMap />} />
-            <Route path="child-profile" element={<ParentChildProfile />} />
-            <Route path="account" element={<ParentAccountSettings />} />
-            <Route path="notifications" element={<ParentNotifications />} />
+          <Route path="danger-zones" element={<ParentDangerZoneMap />} />
+          <Route path="child-profile" element={<ParentChildProfile />} />
+          <Route path="packages" element={<ParentPackageManagement />} />
+          <Route path="account" element={<ParentAccountSettings />} />
+          <Route path="notifications" element={<ParentNotifications />} />
           </Route>
 
           {/* Teacher Routes */}
@@ -72,6 +81,7 @@ function App() {
             <Route path="students" element={<TeacherStudentManagement />} />
             <Route path="teachers" element={<TeacherManagement />} />
             <Route path="cameras" element={<CameraManagement />} />
+            <Route path="packages" element={<SchoolPackageManagement />} />
             <Route path="reports" element={<TeacherReports />} />
             {/* <Route path="settings" element={<TeacherSettings />} /> */}
             <Route path="live-view" element={<TeacherLiveView />} />
@@ -82,17 +92,10 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin" element={<ProtectedRoute role="admin" />}>
             <Route index element={<AdminDashboard />} />
-            <Route path="classes" element={<AdminClassManagement />} />
             <Route path="accounts" element={<AdminAccountManagement />} />
-            <Route path="teachers" element={<AdminTeacherManagement />} />
-            <Route path="parents" element={<AdminParentManagement />} />
-            <Route path="permissions" element={<AdminPermissionManagement />} />
+            <Route path="packages" element={<AdminPackageManagement />} />
+            <Route path="payments" element={<AdminPaymentManagement />} />
             <Route path="reports" element={<AdminReports />} />
-            <Route path="live-view" element={<AdminLiveView />} />
-            <Route path="playback" element={<AdminCameraPlayback />} />
-            <Route path="alerts" element={<AdminAlertsCenter />} />
-            <Route path="danger-zones" element={<AdminDangerZoneManager />} />
-            <Route path="communication" element={<AdminCommunicationCenter />} />
           </Route>
         </Routes>
       </div>
