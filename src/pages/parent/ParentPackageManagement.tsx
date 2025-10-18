@@ -57,7 +57,7 @@ const ParentPackageManagement: React.FC = () => {
 
   const fetchPackages = async () => {
     try {
-      const response = await fetch('/api/packages')
+      const response = await fetch('http://127.0.0.1:8000/api/packages')
       if (response.ok) setPackages(await response.json())
       else showError('Không thể tải danh sách gói dịch vụ')
     } catch (error) {
@@ -68,7 +68,7 @@ const ParentPackageManagement: React.FC = () => {
   const fetchPaymentHistory = async () => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch('/api/package-service/user/payments', {
+      const response = await fetch('http://127.0.0.1:8000/api/payments', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (response.ok) setPaymentHistory(await response.json())
@@ -80,7 +80,7 @@ const ParentPackageManagement: React.FC = () => {
   const fetchPendingPayment = async () => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch('/api/package-service/user/pending-payment', {
+      const response = await fetch('http://127.0.0.1:8000/api/pending-payment', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (response.ok) {
@@ -113,8 +113,8 @@ const ParentPackageManagement: React.FC = () => {
         return
       }
       
-      console.log('Making purchase request to:', `/api/package-service/${packageId}/purchase`)
-      const response = await fetch(`/api/package-service/${packageId}/purchase`, {
+      console.log('Making purchase request to:', `http://127.0.0.1:8000/api/package-service/${packageId}/purchase`)
+      const response = await fetch(`http://127.0.0.1:8000/api/package-service/${packageId}/purchase`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -218,7 +218,7 @@ const ParentPackageManagement: React.FC = () => {
   const retryPayment = async (paymentId: number) => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch(`/api/package-service/payment/${paymentId}/retry`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/package-service/payment/${paymentId}/retry`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -308,7 +308,7 @@ const ParentPackageManagement: React.FC = () => {
   const cleanupInvalidPayments = async () => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch('/api/packages/cleanup-invalid-payments', {
+      const response = await fetch('http://127.0.0.1:8000/api/packages/cleanup-invalid-payments', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -336,13 +336,13 @@ const ParentPackageManagement: React.FC = () => {
         const token = localStorage.getItem('smart-child-token')
         
         // Cleanup invalid payments
-        await fetch('/api/packages/cleanup-invalid-payments', {
+        await fetch('http://127.0.0.1:8000/api/packages/cleanup-invalid-payments', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` }
         })
         
         // Force cleanup old pending payments (older than 5 minutes)
-        await fetch('/api/packages/force-cleanup-pending', {
+        await fetch('http://127.0.0.1:8000/api/packages/force-cleanup-pending', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` }
         })

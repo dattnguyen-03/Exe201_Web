@@ -1,15 +1,48 @@
 import React, { useState, useEffect } from 'react'
-import { Package, Plus, Edit, Trash2, Search, Filter, X, Check, XCircle } from 'lucide-react'
+import { Package, Plus, Edit, Trash2, Search, Filter, X, Check, XCircle, Clock, AlertTriangle, Users, TrendingUp } from 'lucide-react'
 import { showSuccess, showError, showWarning, showConfirm } from '../../utils/swal'
 import { adminApiService, PackageData, PackageCreateData, PackageUpdateData } from '../../services/adminApiService'
 
+// Interface cho đếm ngược
+interface ExpiringPackage {
+  user_id: number
+  user_name: string
+  user_email: string
+  user_role: string
+  package_id: number
+  package_name: string
+  package_price: number
+  expiry_date: string
+  days_remaining: number
+  hours_remaining: number
+  status: 'expired' | 'expiring_soon' | 'expiring_7_days' | 'active'
+  urgency: 'critical' | 'high' | 'medium' | 'low'
+  is_expired: boolean
+}
+
+interface PackageStats {
+  active: number
+  expiring_7_days: number
+  expiring_3_days: number
+  expired: number
+}
+
 const AdminPackageManagement: React.FC = () => {
   const [packages, setPackages] = useState<PackageData[]>([])
+  const [expiringPackages, setExpiringPackages] = useState<ExpiringPackage[]>([])
+  const [packageStats, setPackageStats] = useState<PackageStats>({
+    active: 0,
+    expiring_7_days: 0,
+    expiring_3_days: 0,
+    expired: 0
+  })
   const [searchTerm, setSearchTerm] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedPackage, setSelectedPackage] = useState<PackageData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showCountdownModal, setShowCountdownModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<ExpiringPackage | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -41,8 +74,37 @@ const AdminPackageManagement: React.FC = () => {
     }
   }
 
+  // Fetch expiring packages
+  const fetchExpiringPackages = async () => {
+    try {
+      const response = await fetch('/api/admin/expiring-packages', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setExpiringPackages(data.packages || [])
+        setPackageStats({
+          active: data.active_count || 0,
+          expiring_7_days: data.expiring_7_days_count || 0,
+          expiring_3_days: data.expiring_soon_count || 0,
+          expired: data.expired_count || 0
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching expiring packages:', error)
+    }
+  }
+
   useEffect(() => {
     fetchPackages()
+    fetchExpiringPackages()
+    
+    // Auto refresh expiring packages every 30 seconds
+    const interval = setInterval(fetchExpiringPackages, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   // Handle form submission
@@ -190,6 +252,34 @@ const AdminPackageManagement: React.FC = () => {
     }
   }
 
+  // Get urgency color
+  const getUrgencyColor = (urgency: string) => {
+    switch (urgency) {
+      case 'critical': return 'text-red-600 bg-red-100'
+      case 'high': return 'text-orange-600 bg-orange-100'
+      case 'medium': return 'text-yellow-600 bg-yellow-100'
+      case 'low': return 'text-green-600 bg-green-100'
+      default: return 'text-gray-600 bg-gray-100'
+    }
+  }
+
+  // Get status text
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'expired': return 'Đã hết hạn'
+      case 'expiring_soon': return 'Sắp hết hạn'
+      case 'expiring_7_days': return 'Hết hạn trong 7 ngày'
+      case 'active': return 'Đang hoạt động'
+      default: return 'Không xác định'
+    }
+  }
+
+  // Handle countdown modal
+  const handleShowCountdown = (user: ExpiringPackage) => {
+    setSelectedUser(user)
+    setShowCountdownModal(true)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -230,25 +320,48 @@ const AdminPackageManagement: React.FC = () => {
         </div>
         <div className="card bg-gradient-to-br from-green-25 to-green-50 border-green-200">
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-700">{packages.filter(p => p.is_active).length}</div>
+            <div className="text-2xl font-bold text-green-700">{packageStats.active}</div>
             <div className="text-sm text-green-600">Đang hoạt động</div>
           </div>
         </div>
         <div className="card bg-gradient-to-br from-orange-25 to-orange-50 border-orange-200">
           <div className="text-center">
-            <div className="text-2xl font-bold text-orange-700">{packages.filter(p => !p.is_active).length}</div>
-            <div className="text-sm text-orange-600">Tạm dừng</div>
+            <div className="text-2xl font-bold text-orange-700">{packageStats.expiring_7_days}</div>
+            <div className="text-sm text-orange-600">Còn hạn 7 ngày</div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-purple-25 to-purple-50 border-purple-200">
+        <div className="card bg-gradient-to-br from-red-25 to-red-50 border-red-200">
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-700">
-              {formatPrice(packages.reduce((sum, p) => sum + p.price, 0))}
-            </div>
-            <div className="text-sm text-purple-600">Tổng giá trị</div>
+            <div className="text-2xl font-bold text-red-700">{packageStats.expired}</div>
+            <div className="text-sm text-red-600">Đã hết hạn</div>
           </div>
         </div>
       </div>
+
+      {/* Expiring Packages Alert */}
+      {(packageStats.expired > 0 || packageStats.expiring_3_days > 0) && (
+        <div className="card bg-gradient-to-r from-red-50 to-orange-50 border-red-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <AlertTriangle className="w-6 h-6 text-red-600" />
+              <div>
+                <h3 className="text-lg font-bold text-red-800">Cảnh báo gói sắp hết hạn</h3>
+                <p className="text-sm text-red-600">
+                  {packageStats.expired > 0 && `${packageStats.expired} gói đã hết hạn`}
+                  {packageStats.expired > 0 && packageStats.expiring_3_days > 0 && ', '}
+                  {packageStats.expiring_3_days > 0 && `${packageStats.expiring_3_days} gói sắp hết hạn`}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => fetchExpiringPackages()}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+            >
+              Xem chi tiết
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Search and Filter */}
       <div className="card">
@@ -267,6 +380,64 @@ const AdminPackageManagement: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* Expiring Packages List */}
+      {expiringPackages.length > 0 && (
+        <div className="card">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-900">⏰ Gói sắp hết hạn</h3>
+            <span className="text-sm text-gray-500">{expiringPackages.length} gói</span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {expiringPackages.slice(0, 6).map((user) => (
+              <div key={user.user_id} className="border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-shadow">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h4 className="font-bold text-gray-900 mb-1">{user.user_name}</h4>
+                    <p className="text-sm text-gray-600">{user.user_email}</p>
+                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${getUrgencyColor(user.urgency)}`}>
+                      {getStatusText(user.status)}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleShowCountdown(user)}
+                    className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                    title="Xem đếm ngược"
+                  >
+                    <Clock className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="text-lg font-bold text-blue-600">
+                    {user.package_name}
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Còn lại:</span>
+                    <span className={`font-bold ${user.days_remaining < 0 ? 'text-red-600' : user.days_remaining <= 3 ? 'text-orange-600' : 'text-green-600'}`}>
+                      {user.days_remaining < 0 ? 'Đã hết hạn' : `${user.days_remaining} ngày`}
+                    </span>
+                  </div>
+                  
+                  <div className="text-xs text-gray-500">
+                    Hết hạn: {new Date(user.expiry_date).toLocaleDateString('vi-VN')}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {expiringPackages.length > 6 && (
+            <div className="text-center mt-4">
+              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                Xem tất cả {expiringPackages.length} gói
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Packages List */}
       <div className="card">
@@ -631,6 +802,119 @@ const AdminPackageManagement: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Countdown Modal */}
+      {showCountdownModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 w-full max-w-md shadow-2xl border border-blue-200/50">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">⏰ Đếm ngược gói dịch vụ</h2>
+              <button
+                onClick={() => setShowCountdownModal(false)}
+                className="p-2 text-gray-600 hover:text-gray-700 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* User Info */}
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{selectedUser.user_name}</h3>
+                <p className="text-gray-600">{selectedUser.user_email}</p>
+                <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-2 ${getUrgencyColor(selectedUser.urgency)}`}>
+                  {getStatusText(selectedUser.status)}
+                </span>
+              </div>
+
+              {/* Package Info */}
+              <div className="bg-blue-50 rounded-xl p-4">
+                <h4 className="font-bold text-blue-900 mb-2">{selectedUser.package_name}</h4>
+                <div className="text-2xl font-bold text-blue-600">
+                  {formatPrice(selectedUser.package_price)}
+                </div>
+              </div>
+
+              {/* Countdown */}
+              <div className="text-center">
+                <div className="text-4xl font-bold text-gray-900 mb-2">
+                  {selectedUser.days_remaining < 0 ? '00' : selectedUser.days_remaining.toString().padStart(2, '0')}
+                </div>
+                <div className="text-sm text-gray-600 mb-4">ngày</div>
+                
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-gray-700">
+                      {Math.floor(selectedUser.hours_remaining % 24).toString().padStart(2, '0')}
+                    </div>
+                    <div className="text-xs text-gray-600">giờ</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-700">
+                      {Math.floor((selectedUser.hours_remaining * 60) % 60).toString().padStart(2, '0')}
+                    </div>
+                    <div className="text-xs text-gray-600">phút</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Expiry Date */}
+              <div className="text-center">
+                <div className="text-sm text-gray-600">Hết hạn vào:</div>
+                <div className="font-bold text-gray-900">
+                  {new Date(selectedUser.expiry_date).toLocaleDateString('vi-VN', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>Thời gian còn lại</span>
+                  <span>{Math.max(0, Math.round((selectedUser.hours_remaining / (30 * 24)) * 100))}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      selectedUser.days_remaining < 0 ? 'bg-red-500' :
+                      selectedUser.days_remaining <= 3 ? 'bg-orange-500' :
+                      selectedUser.days_remaining <= 7 ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}
+                    style={{ 
+                      width: `${Math.max(0, Math.min(100, Math.round((selectedUser.hours_remaining / (30 * 24)) * 100)))}%` 
+                    }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowCountdownModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Đóng
+                </button>
+                <button
+                  onClick={() => {
+                    // TODO: Implement extend package functionality
+                    showWarning('Tính năng gia hạn sẽ được phát triển')
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Gia hạn
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
