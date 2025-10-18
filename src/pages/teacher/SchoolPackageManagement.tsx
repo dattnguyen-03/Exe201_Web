@@ -57,7 +57,7 @@ const SchoolPackageManagement: React.FC = () => {
   // Fetch available packages
   const fetchPackages = async () => {
     try {
-      const response = await fetch('/api/package-service/')
+      const response = await fetch('http://127.0.0.1:8000/api/package-service/')
       if (response.ok) {
         const data = await response.json()
         setPackages(data)
@@ -74,7 +74,7 @@ const SchoolPackageManagement: React.FC = () => {
   const fetchPaymentHistory = async () => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch('/api/package-service/user/payments', {
+      const response = await fetch('http://127.0.0.1:8000/api/package-service/user/payments', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -92,7 +92,7 @@ const SchoolPackageManagement: React.FC = () => {
   const fetchPendingPayment = async () => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch('/api/package-service/user/pending-payment', {
+      const response = await fetch('http://127.0.0.1:8000/api/package-service/user/pending-payment', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -128,8 +128,8 @@ const SchoolPackageManagement: React.FC = () => {
         return
       }
       
-      console.log('Making purchase request to:', `/api/package-service/${packageId}/purchase`)
-      const response = await fetch(`/api/package-service/${packageId}/purchase`, {
+      console.log('Making purchase request to:', `http://127.0.0.1:8000/api/package-service/${packageId}/purchase`)
+      const response = await fetch(`http://127.0.0.1:8000/api/package-service/${packageId}/purchase`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,

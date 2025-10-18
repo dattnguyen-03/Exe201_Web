@@ -77,7 +77,7 @@ const AdminPackageManagement: React.FC = () => {
   // Fetch expiring packages
   const fetchExpiringPackages = async () => {
     try {
-      const response = await fetch('/api/admin/expiring-packages', {
+      const response = await fetch('http://127.0.0.1:8000/api/admin/expiring-packages', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

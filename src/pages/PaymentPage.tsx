@@ -52,7 +52,7 @@ const PaymentPage: React.FC = () => {
   // Fetch package details
   const fetchPackageDetails = async () => {
     try {
-      const response = await fetch(`/api/packages/`)
+      const response = await fetch(`http://127.0.0.1:8000/api/packages/`)
       if (response.ok) {
         const packages = await response.json()
         const packageIdNum = parseInt(packageId || '0')
@@ -80,7 +80,7 @@ const PaymentPage: React.FC = () => {
   const fetchPaymentDetails = async () => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch(`/api/payments/${paymentId}`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/payments/${paymentId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -160,7 +160,7 @@ const PaymentPage: React.FC = () => {
         }
         
         console.log('Creating PayOS order for existing payment:', orderData)
-        const payosResponse = await fetch('/api/paypos/create-order', {
+        const payosResponse = await fetch('http://127.0.0.1:8000/api/paypos/create-order', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -191,7 +191,7 @@ const PaymentPage: React.FC = () => {
       
       // Check if there's already a pending payment for this package
       console.log('Checking for existing pending payments for package:', packageData?.id)
-      const checkResponse = await fetch(`/api/packages/user/payments`, {
+      const checkResponse = await fetch(`http://127.0.0.1:8000/api/packages/user/payments`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       
@@ -230,7 +230,7 @@ const PaymentPage: React.FC = () => {
           }
           
           console.log('Creating PayOS order for existing payment:', orderData)
-          const payosResponse = await fetch('/api/paypos/create-order', {
+          const payosResponse = await fetch('http://127.0.0.1:8000/api/paypos/create-order', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -268,7 +268,7 @@ const PaymentPage: React.FC = () => {
       console.log('Request URL:', '/api/paypos/create')
       console.log('Request body:', formData.toString())
 
-      const response = await fetch('/api/paypos/create', {
+      const response = await fetch('http://127.0.0.1:8000/api/paypos/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
