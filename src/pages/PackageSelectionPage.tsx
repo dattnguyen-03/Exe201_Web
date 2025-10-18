@@ -15,11 +15,20 @@ interface PackageData {
   is_active: boolean
 }
 
+interface PendingPayment {
+  id: number
+  amount: number
+  package_name: string
+  status: string
+  transaction_date: string
+}
+
 const PackageSelectionPage: React.FC = () => {
   const navigate = useNavigate()
   const [packages, setPackages] = useState<PackageData[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPackage, setSelectedPackage] = useState<PackageData | null>(null)
+  const [pendingPayments, setPendingPayments] = useState<PendingPayment[]>([])
 
   // Fetch packages
   const fetchPackages = async () => {
@@ -38,8 +47,53 @@ const PackageSelectionPage: React.FC = () => {
     }
   }
 
+  // Fetch pending payments
+  const fetchPendingPayments = async () => {
+    try {
+      const token = localStorage.getItem('smart-child-token')
+      if (!token) return
+      
+      const response = await fetch('/api/paypos/user/pending', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setPendingPayments(data.pending_payments || [])
+      }
+    } catch (error) {
+      console.error('Error fetching pending payments:', error)
+    }
+  }
+
+  // Cancel pending payment
+  const cancelPendingPayment = async (paymentId: number) => {
+    try {
+      const token = localStorage.getItem('smart-child-token')
+      const response = await fetch(`/api/paypos/cancel/${paymentId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (response.ok) {
+        showSuccess('Đã hủy giao dịch thành công')
+        fetchPendingPayments() // Refresh pending payments
+      } else {
+        const error = await response.json()
+        showError(error.detail || 'Không thể hủy giao dịch')
+      }
+    } catch (error) {
+      showError('Lỗi khi hủy giao dịch')
+    }
+  }
+
   useEffect(() => {
     fetchPackages()
+    fetchPendingPayments()
   }, [])
 
   // Handle package selection
@@ -216,6 +270,50 @@ const PackageSelectionPage: React.FC = () => {
           ))}
         </div>
 
+        {/* Pending Payments Section */}
+        {pendingPayments.length > 0 && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-yellow-800">Giao dịch đang chờ thanh toán</h3>
+              <span className="bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+                {pendingPayments.length} giao dịch
+              </span>
+            </div>
+            
+            <div className="space-y-3">
+              {pendingPayments.map((payment) => (
+                <div key={payment.id} className="bg-white rounded-lg p-4 border border-yellow-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900">{payment.package_name}</p>
+                      <p className="text-sm text-gray-600">
+                        {formatPrice(payment.amount)} • {new Date(payment.transaction_date).toLocaleDateString('vi-VN')}
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">
+                        Đang chờ
+                      </span>
+                      <button
+                        onClick={() => cancelPendingPayment(payment.id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors"
+                      >
+                        Hủy
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-4 p-3 bg-yellow-100 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                <strong>Lưu ý:</strong> Bạn cần hoàn tất hoặc hủy giao dịch đang chờ trước khi tạo giao dịch mới.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Purchase Section */}
         {selectedPackage && (
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
@@ -232,10 +330,17 @@ const PackageSelectionPage: React.FC = () => {
               </div>
               <button
                 onClick={handlePurchase}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-medium hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex items-center space-x-2 shadow-lg"
+                disabled={pendingPayments.length > 0}
+                className={`px-8 py-4 rounded-xl font-medium transition-all duration-300 flex items-center space-x-2 shadow-lg ${
+                  pendingPayments.length > 0
+                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700'
+                }`}
               >
                 <CreditCard className="w-5 h-5" />
-                <span>Thanh toán ngay</span>
+                <span>
+                  {pendingPayments.length > 0 ? 'Có giao dịch đang chờ' : 'Thanh toán ngay'}
+                </span>
               </button>
             </div>
           </div>

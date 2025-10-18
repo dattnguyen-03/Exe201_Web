@@ -292,8 +292,23 @@ const PaymentPage: React.FC = () => {
         try {
           const error = JSON.parse(errorText)
           
-          // Check if it's a duplicate payment error
-          if (error.detail && error.detail.includes('already being processed')) {
+          // Check if it's a pending payment error
+          if (error.detail && error.detail.includes('đang chờ thanh toán')) {
+            showWarning('Bạn đã có giao dịch đang chờ thanh toán. Vui lòng hoàn tất hoặc hủy giao dịch đó trước khi tạo giao dịch mới.')
+            
+            // Extract payment ID from error message
+            const paymentIdMatch = error.detail.match(/ID: (\d+)/)
+            if (paymentIdMatch) {
+              const pendingPaymentId = paymentIdMatch[1]
+              // Show option to cancel pending payment
+              setTimeout(() => {
+                if (confirm('Bạn có muốn hủy giao dịch đang chờ và tạo giao dịch mới không?')) {
+                  cancelPendingPayment(pendingPaymentId)
+                }
+              }, 2000)
+            }
+            
+          } else if (error.detail && error.detail.includes('already being processed')) {
             showWarning('Đã có giao dịch đang chờ xử lý cho gói này. Vui lòng hoàn tất giao dịch hiện tại hoặc chờ 30 giây để tạo giao dịch mới.')
             
             // Start countdown
@@ -346,6 +361,38 @@ const PaymentPage: React.FC = () => {
       }, 1000)
     } else {
       showError('Không thể tạo liên kết thanh toán PayPOS')
+    }
+  }
+
+  // Cancel pending payment
+  const cancelPendingPayment = async (paymentId: string) => {
+    try {
+      setProcessing(true)
+      const token = localStorage.getItem('smart-child-token')
+      
+      const response = await fetch(`/api/paypos/cancel/${paymentId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        showSuccess(result.message || 'Đã hủy giao dịch thành công')
+        // Retry creating new payment
+        setTimeout(() => {
+          createPayPOSPayment()
+        }, 1000)
+      } else {
+        const error = await response.json()
+        showError(error.detail || 'Không thể hủy giao dịch')
+      }
+    } catch (error) {
+      console.error('Error cancelling payment:', error)
+      showError('Lỗi khi hủy giao dịch')
+    } finally {
+      setProcessing(false)
     }
   }
 
