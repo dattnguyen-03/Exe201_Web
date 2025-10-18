@@ -193,7 +193,7 @@ const LoginPage: React.FC = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-blue-600 font-semibold">Teacher:</span>
-                      <span className="text-gray-600">school@example.com / school123</span>
+                      <span className="text-gray-600">contact@nguyendu.edu.vn / school123</span>
                     </div>
                   </div>
                 </div>

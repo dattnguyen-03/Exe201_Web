@@ -12,7 +12,12 @@ const PaymentSuccessPage: React.FC = () => {
   // Fetch payment status
   const fetchPaymentStatus = async () => {
     try {
-      const response = await fetch(`/api/payments/${paymentId}/status`)
+      const token = localStorage.getItem('smart-child-token')
+      const response = await fetch(`/api/payments/${paymentId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       if (response.ok) {
         const data = await response.json()
         setPaymentInfo(data)

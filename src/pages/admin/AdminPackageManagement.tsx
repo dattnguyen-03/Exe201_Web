@@ -1,19 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Package, Plus, Edit, Trash2, Search, Filter, X, Check, XCircle } from 'lucide-react'
-import { showSuccess, showError, showWarning } from '../../utils/swal'
-
-interface PackageData {
-  id: number
-  name: string
-  price: number
-  duration_days: number
-  camera_limit: number
-  ai_features: string
-  storage_days: number
-  description?: string
-  is_active: boolean
-  created_at: string
-}
+import { showSuccess, showError, showWarning, showConfirm } from '../../utils/swal'
+import { adminApiService, PackageData, PackageCreateData, PackageUpdateData } from '../../services/adminApiService'
 
 const AdminPackageManagement: React.FC = () => {
   const [packages, setPackages] = useState<PackageData[]>([])
@@ -37,22 +25,17 @@ const AdminPackageManagement: React.FC = () => {
   // Fetch packages
   const fetchPackages = async () => {
     try {
-      const token = localStorage.getItem('smart-child-token')
-      const response = await fetch('/api/packages/admin', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
+      console.log('Fetching packages...')
+      const data = await adminApiService.getAllPackages()
         setPackages(data)
-      } else {
-        showError('Không thể tải danh sách gói dịch vụ')
-      }
+      console.log('Packages loaded:', data.length)
     } catch (error) {
+      console.error('Fetch error:', error)
+      if (error instanceof Error) {
+        showError(error.message)
+      } else {
       showError('Lỗi kết nối')
+      }
     } finally {
       setLoading(false)
     }
@@ -67,63 +50,92 @@ const AdminPackageManagement: React.FC = () => {
     e.preventDefault()
     
     try {
-      const token = localStorage.getItem('smart-child-token')
-      const formDataToSend = new FormData()
+      console.log('Submitting form...')
       
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value) formDataToSend.append(key, value)
-      })
+      // Validate ai_features JSON
+      let aiFeaturesString = formData.ai_features
+      
+      try {
+        // Try to parse as JSON to validate
+        const parsed = JSON.parse(formData.ai_features)
+        
+        if (!Array.isArray(parsed)) {
+          throw new Error('ai_features must be a JSON array')
+        }
+        // Re-stringify to ensure proper format
+        aiFeaturesString = JSON.stringify(parsed)
+      } catch (e) {
+        showError('Tính năng AI phải là một JSON array hợp lệ. Ví dụ: ["face_recognition", "behavior_analysis"]')
+        return
+      }
+      
+      // Prepare data
+      const packageData: PackageCreateData | PackageUpdateData = {
+        name: formData.name,
+        price: parseFloat(formData.price),
+        duration_days: parseInt(formData.duration_days),
+        camera_limit: parseInt(formData.camera_limit),
+        ai_features: aiFeaturesString,
+        storage_days: parseInt(formData.storage_days),
+        description: formData.description || undefined
+      }
 
-      const url = selectedPackage ? `/api/packages/${selectedPackage.id}` : '/api/packages'
-      const method = selectedPackage ? 'PUT' : 'POST'
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formDataToSend
-      })
-
-      if (response.ok) {
-        showSuccess(selectedPackage ? 'Cập nhật gói dịch vụ thành công!' : 'Tạo gói dịch vụ thành công!')
+      let result: PackageData
+      
+      if (selectedPackage) {
+        // Update existing package
+        console.log('Updating package:', selectedPackage.id)
+        result = await adminApiService.updatePackage(selectedPackage.id, packageData)
+        showSuccess('Cập nhật gói dịch vụ thành công!')
+      } else {
+        // Create new package
+        console.log('Creating new package')
+        result = await adminApiService.createPackage(packageData as PackageCreateData)
+        showSuccess('Tạo gói dịch vụ thành công!')
+      }
+      
+      console.log('Package saved:', result)
+      
+      // Reset form and close modals
         setShowAddModal(false)
         setShowEditModal(false)
         setSelectedPackage(null)
         resetForm()
         fetchPackages()
-      } else {
-        const error = await response.json()
-        showError(error.detail || 'Có lỗi xảy ra')
-      }
+      
     } catch (error) {
-      showError('Lỗi kết nối')
+      console.error('Submit error:', error)
+      if (error instanceof Error) {
+        showError(error.message)
+      } else {
+        showError('Lỗi kết nối')
+      }
     }
   }
 
   // Handle delete
   const handleDelete = async (packageId: number) => {
-    const confirmed = await showWarning('Bạn có chắc chắn muốn xóa gói dịch vụ này?')
-    if (!confirmed) return
-
     try {
-      const token = localStorage.getItem('smart-child-token')
-      const response = await fetch(`/api/packages/${packageId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const result = await showConfirm(
+        'Bạn có chắc chắn muốn xóa gói dịch vụ này? Hành động này không thể hoàn tác.',
+        'Xác nhận xóa gói dịch vụ'
+      )
+      
+      if (!result.isConfirmed) {
+        return // User cancelled
+      }
 
-      if (response.ok) {
+      console.log('Deleting package:', packageId)
+      await adminApiService.deletePackage(packageId)
         showSuccess('Xóa gói dịch vụ thành công!')
         fetchPackages()
-      } else {
-        const error = await response.json()
-        showError(error.detail || 'Không thể xóa gói dịch vụ')
-      }
     } catch (error) {
-      showError('Lỗi kết nối')
+      console.error('Delete error:', error)
+      if (error instanceof Error) {
+        showError(error.message)
+      } else {
+        showError('Lỗi kết nối')
+      }
     }
   }
 
@@ -439,7 +451,7 @@ const AdminPackageManagement: React.FC = () => {
                     className="w-full px-5 py-4 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm placeholder-gray-500 text-gray-900 text-base"
                     value={formData.ai_features}
                     onChange={(e) => setFormData({ ...formData, ai_features: e.target.value })}
-                    placeholder='["face_recognition", "behavior_analysis"]'
+                    placeholder='["face_recognition", "behavior_analysis", "danger_detection"]'
                   />
                 </div>
               </div>
@@ -581,6 +593,7 @@ const AdminPackageManagement: React.FC = () => {
                     className="w-full px-5 py-4 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all duration-200 bg-white/80 backdrop-blur-sm placeholder-gray-500 text-gray-900 text-base"
                     value={formData.ai_features}
                     onChange={(e) => setFormData({ ...formData, ai_features: e.target.value })}
+                    placeholder='["face_recognition", "behavior_analysis", "danger_detection"]'
                   />
                 </div>
               </div>

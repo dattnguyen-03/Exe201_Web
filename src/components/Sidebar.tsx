@@ -48,7 +48,6 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     { to: '/teacher/cameras', icon: Camera, label: 'Quản lý Camera' },
     { to: '/teacher/packages', icon: Package, label: 'Gói Dịch Vụ' },
     // { to: '/teacher/messages', icon: MessageSquare, label: 'Giao tiếp PH' },
-    { to: '/teacher/reports', icon: BarChart3, label: 'Báo cáo & Thống kê' },
     { to: '/teacher/settings', icon: Settings, label: 'Cài đặt' },
   ]
 
@@ -56,7 +55,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     { to: '/admin', icon: Home, label: 'Bảng Điều Khiển', end: true },
     { to: '/admin/accounts', icon: Shield, label: 'Quản Lý Tài Khoản' },
     { to: '/admin/packages', icon: Package, label: 'Quản Lý Gói Dịch Vụ' },
-    { to: '/admin/payments', icon: CreditCard, label: 'Quản Lý Thanh Toán' },
+    { to: '/admin/user-packages', icon: Users, label: 'Quản Lý Gói Người Dùng' },
     { to: '/admin/reports', icon: FileText, label: 'Báo Cáo Hệ Thống' },
   ]
 

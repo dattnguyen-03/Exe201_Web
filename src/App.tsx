@@ -43,7 +43,7 @@ import PaymentCancelPage from './pages/PaymentCancelPage'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminAccountManagement from './pages/admin/AdminAccountManagement'
 import AdminPackageManagement from './pages/admin/AdminPackageManagement'
-import AdminPaymentManagement from './pages/admin/AdminPaymentManagement'
+import AdminUserPackageManagement from './pages/admin/AdminUserPackageManagement'
 import AdminReports from './pages/admin/AdminReports'
 function App() {
   return (
@@ -94,7 +94,7 @@ function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="accounts" element={<AdminAccountManagement />} />
             <Route path="packages" element={<AdminPackageManagement />} />
-            <Route path="payments" element={<AdminPaymentManagement />} />
+            <Route path="user-packages" element={<AdminUserPackageManagement />} />
             <Route path="reports" element={<AdminReports />} />
           </Route>
         </Routes>

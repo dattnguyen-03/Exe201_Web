@@ -1,12 +1,17 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Users, Plus, Edit, Trash2, Search, Filter, UserCheck, Shield, Mail, Phone, X, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { showSuccess, showError, showWarning } from '../../utils/swal'
+import { showSuccess, showError, showWarning, showConfirm } from '../../utils/swal'
+import { adminApiService, User, CreateUserData } from '../../services/adminApiService'
 
 const AdminAccountManagement: React.FC = () => {
   const navigate = useNavigate()
   const [selectedRole, setSelectedRole] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
+  
+  // API state
+  const [accounts, setAccounts] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
   
   // Modal state
   const [showAddAccountModal, setShowAddAccountModal] = useState(false)
@@ -19,56 +24,28 @@ const AdminAccountManagement: React.FC = () => {
     role: '',
     password: '',
     confirmPassword: '',
-    class: '',
+    address: '',
     permissions: [] as string[]
   })
 
-  const accounts = [
-    {
-      id: 1,
-      name: 'Trường Mầm Non Hoa Hồng',
-      email: 'truongmamnon@hoahong.edu.vn',
-      phone: '0901 234 567',
-      role: 'school',
-      status: 'active',
-      address: '123 Đường ABC, Quận 1, TP.HCM',
-      lastLogin: '2024-01-15 14:30',
-      permissions: ['manage_teachers', 'manage_classes', 'manage_students']
-    },
-    {
-      id: 2,
-      name: 'Trường Mầm Non Bình Minh',
-      email: 'truongmamnon@binhminh.edu.vn',
-      phone: '0902 345 678',
-      role: 'school',
-      status: 'active',
-      address: '456 Đường XYZ, Quận 2, TP.HCM',
-      lastLogin: '2024-01-15 13:45',
-      permissions: ['manage_teachers', 'manage_classes', 'manage_students']
-    },
-    {
-      id: 3,
-      name: 'Lê Thị Hạnh',
-      email: 'hanh.le@gmail.com',
-      phone: '0903 456 789',
-      role: 'parent',
-      status: 'active',
-      children: ['Lê Văn Đức'],
-      lastLogin: '2024-01-15 16:20',
-      permissions: ['view_child', 'receive_alerts']
-    },
-    {
-      id: 4,
-      name: 'Nguyễn Văn Nam',
-      email: 'nam.nguyen@gmail.com',
-      phone: '0904 567 890',
-      role: 'parent',
-      status: 'active',
-      children: ['Nguyễn Thị Mai'],
-      lastLogin: '2024-01-15 16:20',
-      permissions: ['view_child', 'receive_alerts']
+  // Fetch users from API
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      const users = await adminApiService.getAllUsers()
+      setAccounts(users)
+    } catch (error) {
+      console.error('Error fetching users:', error)
+      showError('Không thể tải danh sách tài khoản')
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
+
+  // Load users on component mount
+  useEffect(() => {
+    fetchUsers()
+  }, [])
 
   const roleStats = {
     total: accounts.length,
@@ -97,7 +74,7 @@ const AdminAccountManagement: React.FC = () => {
   }
 
   // Handle form submission
-  const handleAddAccount = (e: React.FormEvent) => {
+  const handleAddAccount = async (e: React.FormEvent) => {
     e.preventDefault()
     
     // Validate password match
@@ -113,24 +90,60 @@ const AdminAccountManagement: React.FC = () => {
       return
     }
     
-    console.log('Adding account:', newAccount)
-    setShowAddAccountModal(false)
-    setNewAccount({
-      name: '',
-      email: '',
-      phone: '',
-      role: '',
-      password: '',
-      confirmPassword: '',
-      class: '',
-      permissions: []
-    })
-    showSuccess('Tài khoản đã được tạo thành công!')
+    try {
+      const createUserData: CreateUserData = {
+        email: newAccount.email,
+        full_name: newAccount.name,
+        password: newAccount.password,
+        role: newAccount.role,
+        phone: newAccount.phone || undefined,
+        address: newAccount.address || undefined
+      }
+      
+      await adminApiService.createUser(createUserData)
+      
+      setShowAddAccountModal(false)
+      setNewAccount({
+        name: '',
+        email: '',
+        phone: '',
+        role: '',
+        password: '',
+        confirmPassword: '',
+        address: '',
+        permissions: []
+      })
+      
+      showSuccess('Tài khoản đã được tạo thành công!')
+      fetchUsers() // Refresh the list
+    } catch (error) {
+      console.error('Error creating user:', error)
+      showError(error instanceof Error ? error.message : 'Không thể tạo tài khoản')
+    }
+  }
+
+  // Handle delete user
+  const handleDeleteUser = async (email: string, name: string) => {
+    const confirmed = await showConfirm(
+      `Bạn có chắc chắn muốn xóa tài khoản "${name}"?`,
+      'Xác nhận xóa tài khoản'
+    )
+    
+    if (confirmed.isConfirmed) {
+      try {
+        await adminApiService.deleteUser(email)
+        showSuccess('Tài khoản đã được xóa thành công!')
+        fetchUsers() // Refresh the list
+      } catch (error) {
+        console.error('Error deleting user:', error)
+        showError(error instanceof Error ? error.message : 'Không thể xóa tài khoản')
+      }
+    }
   }
 
   const filteredAccounts = accounts.filter(account => {
     const matchesRole = selectedRole === 'all' || account.role === selectedRole
-    const matchesSearch = account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = account.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       account.email.toLowerCase().includes(searchTerm.toLowerCase())
     return matchesRole && matchesSearch
   })
@@ -246,7 +259,18 @@ const AdminAccountManagement: React.FC = () => {
         </div>
 
         <div className="space-y-4">
-          {filteredAccounts.map((account) => (
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+              <p className="mt-2 text-gray-500">Đang tải danh sách tài khoản...</p>
+            </div>
+          ) : filteredAccounts.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">Không có tài khoản nào</p>
+            </div>
+          ) : (
+            filteredAccounts.map((account) => (
             <div key={account.id} className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-4">
@@ -262,12 +286,16 @@ const AdminAccountManagement: React.FC = () => {
 
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
-                      <h4 className="font-medium text-gray-900">{account.name}</h4>
+                      <h4 className="font-medium text-gray-900">{account.full_name}</h4>
                       <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getRoleColor(account.role)}`}>
                         {getRoleText(account.role)}
                       </span>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                        Hoạt động
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        account.status === 'active' 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {account.status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
                       </span>
                     </div>
 
@@ -282,23 +310,16 @@ const AdminAccountManagement: React.FC = () => {
                       </div>
                       <div>
                         <span className="text-gray-500">Đăng nhập cuối: </span>
-                        <span>{account.lastLogin}</span>
+                        <span>{account.last_login ? new Date(account.last_login).toLocaleString('vi-VN') : 'Chưa đăng nhập'}</span>
                       </div>
                     </div>
 
-                    {account.class && account.role === 'school' && (
+                    {account.address && account.role === 'school' && (
                       <div className="mt-2">
-                        <span className="text-sm text-blue-600 font-medium">Địa chỉ: {account.class}</span>
+                        <span className="text-sm text-blue-600 font-medium">Địa chỉ: {account.address}</span>
                       </div>
                     )}
 
-                    {account.children && (
-                      <div className="mt-2">
-                        <span className="text-sm text-green-600 font-medium">
-                          Con em: {account.children.join(', ')}
-                        </span>
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -312,13 +333,15 @@ const AdminAccountManagement: React.FC = () => {
                   <button
                     className="p-2 text-gray-400 hover:text-red-600 transition-colors"
                     title="Xóa tài khoản"
+                    onClick={() => handleDeleteUser(account.email, account.full_name)}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
             </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
@@ -405,8 +428,8 @@ const AdminAccountManagement: React.FC = () => {
                     <input
                       type="text"
                       className="w-full px-5 py-4 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200 bg-white/80 backdrop-blur-sm placeholder-gray-500 text-gray-900 text-base"
-                      value={newAccount.class}
-                      onChange={(e) => setNewAccount({ ...newAccount, class: e.target.value })}
+                      value={newAccount.address}
+                      onChange={(e) => setNewAccount({ ...newAccount, address: e.target.value })}
                       placeholder="Nhập địa chỉ trường học"
                     />
                   </div>

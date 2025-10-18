@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Package, CreditCard, Calendar, Camera, HardDrive, Brain, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { Package, CreditCard, Calendar, Camera, HardDrive, Brain, CheckCircle, Clock, AlertCircle, XCircle, RefreshCw } from 'lucide-react'
 import { showSuccess, showError, showWarning } from '../../utils/swal'
 
 interface PackageData {
@@ -14,13 +14,6 @@ interface PackageData {
   is_active: boolean
 }
 
-interface CurrentPackage {
-  has_package: boolean
-  is_active: boolean
-  package?: PackageData
-  expiry_date?: string
-  days_remaining: number
-}
 
 interface PaymentHistory {
   id: number
@@ -37,17 +30,34 @@ interface PaymentHistory {
   }
 }
 
+interface PendingPayment {
+  id: number
+  amount: number
+  status: string
+  method: string
+  transaction_id: string
+  transaction_date: string
+  package: {
+    id: number
+    name: string
+    price: number
+    duration_days: number
+  }
+}
+
 const SchoolPackageManagement: React.FC = () => {
   const [packages, setPackages] = useState<PackageData[]>([])
-  const [currentPackage, setCurrentPackage] = useState<CurrentPackage | null>(null)
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([])
+  const [pendingPayment, setPendingPayment] = useState<PendingPayment | null>(null)
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState<number | null>(null)
+  const [cancelling, setCancelling] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   // Fetch available packages
   const fetchPackages = async () => {
     try {
-      const response = await fetch('/api/packages')
+      const response = await fetch('/api/package-service/')
       if (response.ok) {
         const data = await response.json()
         setPackages(data)
@@ -59,29 +69,12 @@ const SchoolPackageManagement: React.FC = () => {
     }
   }
 
-  // Fetch current package
-  const fetchCurrentPackage = async () => {
-    try {
-      const token = localStorage.getItem('smart-child-token')
-      const response = await fetch('/api/packages/user/current', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setCurrentPackage(data)
-      }
-    } catch (error) {
-      console.error('Error fetching current package:', error)
-    }
-  }
 
   // Fetch payment history
   const fetchPaymentHistory = async () => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch('/api/packages/user/payments', {
+      const response = await fetch('/api/package-service/user/payments', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -95,31 +88,259 @@ const SchoolPackageManagement: React.FC = () => {
     }
   }
 
-  // Purchase package
-  const purchasePackage = async (packageId: number) => {
+  // Fetch pending payment
+  const fetchPendingPayment = async () => {
     try {
-      setPurchasing(packageId)
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch(`/api/packages/${packageId}/purchase`, {
-        method: 'POST',
+      const response = await fetch('/api/package-service/user/pending-payment', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
-
       if (response.ok) {
         const data = await response.json()
-        showSuccess('Tạo giao dịch thành công! Chuyển hướng đến thanh toán...')
-        // Redirect to payment page
-        window.location.href = data.redirect_url
+        if (data.has_pending) {
+          setPendingPayment(data.payment)
+        } else {
+          setPendingPayment(null)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching pending payment:', error)
+    }
+  }
+
+  // Purchase package
+  const purchasePackage = async (packageId: number) => {
+    // Prevent double-click
+    if (purchasing === packageId) {
+      console.log('Purchase already in progress for package:', packageId)
+      return
+    }
+    
+    setPurchasing(packageId)
+    console.log('Starting purchase for package:', packageId)
+    
+    try {
+      const token = localStorage.getItem('smart-child-token')
+      if (!token) {
+        showError('Vui lòng đăng nhập để mua gói dịch vụ')
+        return
+      }
+      
+      console.log('Making purchase request to:', `/api/package-service/${packageId}/purchase`)
+      const response = await fetch(`/api/package-service/${packageId}/purchase`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      console.log('Purchase response status:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Purchase response:', data)
+        
+        // Check if we have direct PayPOS URL
+        if (data.payment_url && data.status === "redirect_to_paypos") {
+          if (data.demo) {
+            // Demo mode - redirect to payment page instead of auto-redirect
+            showSuccess('Tạo giao dịch thành công! Chuyển hướng đến trang thanh toán...')
+            const paymentData = {
+              payment_id: data.payment_id,
+              amount: data.amount,
+              package_name: data.package_name,
+              order_id: data.transaction_id || data.order_id,
+              status: 'Pending',
+              payment_url: data.payment_url,
+              demo: data.demo
+            }
+            sessionStorage.setItem('current-payment', JSON.stringify(paymentData))
+            setTimeout(() => {
+              window.location.href = `/payment/package/${packageId}`
+            }, 1000)
+          } else {
+            // Real PayPOS - redirect directly
+            showSuccess('Tạo giao dịch thành công! Chuyển hướng đến PayPOS...')
+            setTimeout(() => {
+              console.log('Redirecting to PayPOS:', data.payment_url)
+              window.location.href = data.payment_url
+            }, 1000)
+          }
+        } else if (data.redirect_url && data.status === "redirect_to_payment_page") {
+          showSuccess('Tạo giao dịch thành công! Chuyển hướng đến thanh toán...')
+          // Pass payment data to avoid creating duplicate payment
+          const paymentData = {
+            payment_id: data.payment_id,
+            amount: data.amount,
+            package_name: data.package_name,
+            order_id: data.transaction_id || `PKG_${data.payment_id}_${Date.now()}`,
+            status: 'Pending'
+          }
+          // Store payment data in sessionStorage to pass to PaymentPage
+          sessionStorage.setItem('current-payment', JSON.stringify(paymentData))
+          setTimeout(() => {
+            console.log('Redirecting to payment page:', data.redirect_url)
+            window.location.href = data.redirect_url
+          }, 1000)
+        } else {
+          // Fallback case - should not happen with new logic
+          console.warn('Unexpected response format:', data)
+          showError('Lỗi không xác định trong quá trình tạo giao dịch')
+        }
       } else {
-        const error = await response.json()
-        showError(error.detail || 'Không thể tạo giao dịch thanh toán')
+        console.error('Purchase failed with status:', response.status)
+        let errorMessage = 'Không thể tạo giao dịch thanh toán'
+        
+        try {
+          const error = await response.json()
+          console.error('Purchase error response:', error)
+          
+          // Check if it's a duplicate payment error
+          if (error.detail && error.detail.includes('already being processed')) {
+            showWarning('Đã có giao dịch đang chờ xử lý cho gói này. Bạn có thể:')
+            
+            // Show options to user
+            setTimeout(() => {
+              if (confirm('Bạn có muốn chuyển đến trang thanh toán để hoàn tất giao dịch hiện tại không?')) {
+                // Redirect to payment page for this package
+                window.location.href = `/payment/package/${packageId}`
+              }
+            }, 1000)
+            return
+          } else {
+            errorMessage = error.detail || error.message || errorMessage
+          }
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError)
+          errorMessage = `Lỗi server (${response.status}): ${response.statusText}`
+        }
+        
+        showError(errorMessage)
       }
     } catch (error) {
       showError('Lỗi kết nối')
     } finally {
-      setPurchasing(null)
+      // Reset purchasing state after a delay
+      setTimeout(() => {
+        setPurchasing(null)
+      }, 2000)
+    }
+  }
+
+  // Retry payment
+  const retryPayment = async (paymentId: number) => {
+    try {
+      const token = localStorage.getItem('smart-child-token')
+      const response = await fetch(`/api/package-service/payment/${paymentId}/retry`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Retry payment response:', data)
+        
+        // Check if we have direct PayPOS URL
+        if (data.payment_url && data.status === "redirect_to_paypos") {
+          if (data.demo) {
+            // Demo mode - redirect to payment page instead of auto-redirect
+            showSuccess('Tạo link thanh toán thành công! Chuyển hướng đến trang thanh toán...')
+            const paymentData = {
+              payment_id: data.payment_id,
+              amount: data.amount,
+              package_name: data.package_name,
+              order_id: data.transaction_id || data.order_id,
+              status: 'Pending',
+              payment_url: data.payment_url,
+              demo: data.demo
+            }
+            sessionStorage.setItem('current-payment', JSON.stringify(paymentData))
+            setTimeout(() => {
+              window.location.href = `/payment/package/${data.package?.id || 'demo'}`
+            }, 1000)
+          } else {
+            // Real PayPOS - redirect directly
+            showSuccess('Chuyển hướng đến PayPOS...')
+            setTimeout(() => {
+              window.open(data.payment_url, '_blank')
+            }, 1000)
+          }
+        } else if (data.redirect_url) {
+          // Fallback to payment page
+          showSuccess('Chuyển hướng đến trang thanh toán...')
+          setTimeout(() => {
+            window.location.href = data.redirect_url
+          }, 1000)
+        } else {
+          showSuccess('Tạo link thanh toán thành công!')
+        }
+      } else {
+        const error = await response.json()
+        showError(error.detail || 'Không thể tạo link thanh toán')
+      }
+    } catch (error) {
+      showError('Lỗi kết nối')
+    }
+  }
+
+  // Cancel pending payments
+  const cancelPendingPayments = async () => {
+    setCancelling(true)
+    try {
+      const token = localStorage.getItem('smart-child-token')
+      
+      // First try to force cleanup old pending payments
+      const cleanupResponse = await fetch('/api/packages/force-cleanup-pending', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      
+      // Then cancel remaining pending payments
+      const response = await fetch('/api/payments/cancel-pending', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        showSuccess(data.message || 'Đã hủy các giao dịch đang chờ')
+        fetchPaymentHistory() // Tải lại lịch sử để cập nhật
+        fetchPendingPayment() // Refresh pending payment status
+      } else {
+        const error = await response.json()
+        showError(error.detail || 'Không thể hủy giao dịch')
+      }
+    } catch (error) {
+      showError('Lỗi kết nối')
+    } finally {
+      setCancelling(false)
+    }
+  }
+
+  // Cleanup invalid payments
+  const cleanupInvalidPayments = async () => {
+    try {
+      const token = localStorage.getItem('smart-child-token')
+      const response = await fetch('/api/packages/cleanup-invalid-payments', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        showSuccess(data.message || 'Đã dọn dẹp các giao dịch lỗi')
+        fetchPaymentHistory()
+      } else {
+        const error = await response.json()
+        showError(error.detail || 'Không thể dọn dẹp giao dịch lỗi')
+      }
+    } catch (error) {
+      showError('Lỗi kết nối')
     }
   }
 
@@ -128,277 +349,287 @@ const SchoolPackageManagement: React.FC = () => {
       setLoading(true)
       await Promise.all([
         fetchPackages(),
-        fetchCurrentPackage(),
-        fetchPaymentHistory()
+        fetchPaymentHistory(),
+        fetchPendingPayment()
       ])
+      
+      // Auto cleanup invalid and old pending payments
+      try {
+        const token = localStorage.getItem('smart-child-token')
+        
+        // Cleanup invalid payments
+        await fetch('/api/packages/cleanup-invalid-payments', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        // Force cleanup old pending payments (older than 5 minutes)
+        await fetch('/api/packages/force-cleanup-pending', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        // Refresh payment history after cleanup
+        fetchPaymentHistory()
+      } catch (error) {
+        console.log('Auto cleanup failed:', error)
+      }
+      
       setLoading(false)
     }
     loadData()
+
+    // Auto refresh data every 30 seconds to catch payment status updates
+    const refreshInterval = setInterval(() => {
+      fetchPaymentHistory()
+      fetchPendingPayment()
+    }, 30000)
+
+    return () => clearInterval(refreshInterval)
   }, [])
 
-  // Format price
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price)
-  }
+  // Refresh data when page becomes visible (user returns from payment page)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('Page became visible, refreshing data...')
+        refreshData()
+      }
+    }
 
-  // Parse AI features
-  const parseAIFeatures = (features: string) => {
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
+  // Refresh data function
+  const refreshData = async () => {
+    setRefreshing(true)
     try {
-      return JSON.parse(features)
-    } catch {
-      return []
+      await Promise.all([
+        fetchPaymentHistory(),
+        fetchPendingPayment()
+      ])
+      showSuccess('Đã cập nhật dữ liệu!')
+    } catch (error) {
+      showError('Lỗi khi cập nhật dữ liệu')
+    } finally {
+      setRefreshing(false)
     }
   }
 
-  // Format date
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
+  // --- Helper Functions ---
+  const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
+  const parseAIFeatures = (features: string) => { try { return JSON.parse(features) } catch { return [] } }
+  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center h-[60vh]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải...</p>
+          <p className="text-gray-600">Đang tải dữ liệu...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl p-6">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-            <Package className="w-6 h-6 text-white" />
+      <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl p-6 shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <Package className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Quản lý Gói Dịch Vụ Trường Học 📦</h1>
+              <p className="text-green-100">Mua và quản lý các gói dịch vụ cho trường học của bạn.</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold mb-2">📦 Quản lý Gói Dịch Vụ Trường Học</h1>
-            <p className="text-green-100">Mua và quản lý gói dịch vụ cho trường học của bạn</p>
-          </div>
+          <button
+            onClick={refreshData}
+            disabled={refreshing}
+            className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+            <span className="text-sm font-medium">Làm mới</span>
+          </button>
         </div>
       </div>
 
-      {/* Current Package Status */}
-      {currentPackage && (
-        <div className="card">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Gói dịch vụ hiện tại</h2>
-          
-          {currentPackage.has_package ? (
-            <div className={`p-6 rounded-xl border-2 ${
-              currentPackage.is_active 
-                ? 'bg-green-50 border-green-200' 
-                : 'bg-red-50 border-red-200'
-            }`}>
-              <div className="flex items-center space-x-3 mb-4">
-                {currentPackage.is_active ? (
-                  <CheckCircle className="w-8 h-8 text-green-600" />
-                ) : (
-                  <AlertCircle className="w-8 h-8 text-red-600" />
-                )}
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">
-                    {currentPackage.package?.name}
-                  </h3>
-                  <p className={`text-sm ${
-                    currentPackage.is_active ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {currentPackage.is_active 
-                      ? `Còn ${currentPackage.days_remaining} ngày` 
-                      : 'Đã hết hạn'
-                    }
-                  </p>
-                </div>
+      {/* Pending Payment */}
+      {pendingPayment && (
+        <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-6 shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                <CreditCard className="w-5 h-5 text-white" />
               </div>
-              
-              {currentPackage.package && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">
-                      {currentPackage.package.camera_limit}
-                    </div>
-                    <div className="text-sm text-gray-600">Camera</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">
-                      {currentPackage.package.storage_days}
-                    </div>
-                    <div className="text-sm text-gray-600">Ngày lưu trữ</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">
-                      {parseAIFeatures(currentPackage.package.ai_features).length}
-                    </div>
-                    <div className="text-sm text-gray-600">Tính năng AI</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">
-                      {currentPackage.package.duration_days}
-                    </div>
-                    <div className="text-sm text-gray-600">Ngày</div>
-                  </div>
-                </div>
-              )}
-              
-              {currentPackage.expiry_date && (
-                <div className="mt-4 text-center">
-                  <p className="text-sm text-gray-600">
-                    Hết hạn: {formatDate(currentPackage.expiry_date)}
-                  </p>
-                </div>
-              )}
+              <div>
+                <h3 className="text-lg font-bold text-orange-800">Giao dịch đang chờ thanh toán</h3>
+                <p className="text-orange-600 text-sm">Bạn có một giao dịch chưa hoàn tất</p>
+              </div>
             </div>
-          ) : (
-            <div className="p-6 bg-gray-50 rounded-xl border border-gray-200 text-center">
-              <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có gói dịch vụ</h3>
-              <p className="text-gray-600">Hãy chọn gói dịch vụ phù hợp để bắt đầu</p>
+            <div className="text-right">
+              <div className="text-lg font-bold text-orange-800">{formatPrice(pendingPayment.amount)}</div>
+              <div className="text-orange-600 text-sm">{pendingPayment.package.name}</div>
             </div>
-          )}
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="bg-white rounded-lg p-3">
+              <div className="text-sm text-gray-500">Mã giao dịch</div>
+              <div className="font-mono text-sm">{pendingPayment.transaction_id}</div>
+            </div>
+            <div className="bg-white rounded-lg p-3">
+              <div className="text-sm text-gray-500">Ngày tạo</div>
+              <div className="text-sm">{formatDate(pendingPayment.transaction_date)}</div>
+            </div>
+            <div className="bg-white rounded-lg p-3">
+              <div className="text-sm text-gray-500">Trạng thái</div>
+              <div className="text-sm text-orange-600 font-medium">Đang chờ thanh toán</div>
+            </div>
+          </div>
+          
+          <div className="flex space-x-3">
+            <button
+              onClick={() => retryPayment(pendingPayment.id)}
+              className="flex-1 bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors font-medium flex items-center justify-center space-x-2"
+            >
+              <CreditCard className="w-4 h-4" />
+              <span>Thanh toán lại</span>
+            </button>
+            <button
+              onClick={() => {
+                if (confirm('Bạn có chắc chắn muốn hủy giao dịch này?')) {
+                  cancelPendingPayments()
+                }
+              }}
+              className="px-6 py-3 border border-orange-300 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors font-medium"
+            >
+              Hủy giao dịch
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Available Package */}
-      <div className="card">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Gói dịch vụ cho trường học</h2>
-        
-        {packages.length > 0 ? (
-          <div className="max-w-2xl mx-auto">
-            {packages.map((pkg) => (
-              <div key={pkg.id} className="border-2 border-green-200 rounded-2xl p-8 bg-gradient-to-br from-green-50 to-emerald-50">
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Package className="w-8 h-8 text-green-600" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{pkg.name}</h3>
-                  <div className="text-4xl font-bold text-green-600 mb-2">
-                    {formatPrice(pkg.price)}
-                  </div>
-                  <div className="text-lg text-gray-600">/ {pkg.duration_days} ngày</div>
-                </div>
-                
-                {pkg.description && (
-                  <p className="text-gray-700 text-center mb-6 leading-relaxed">{pkg.description}</p>
-                )}
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                  <div className="text-center p-4 bg-white rounded-lg">
-                    <Camera className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-gray-900">{pkg.camera_limit}</div>
-                    <div className="text-sm text-gray-600">Camera</div>
-                  </div>
-                  <div className="text-center p-4 bg-white rounded-lg">
-                    <HardDrive className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-gray-900">{pkg.storage_days}</div>
-                    <div className="text-sm text-gray-600">Ngày lưu trữ</div>
-                  </div>
-                  <div className="text-center p-4 bg-white rounded-lg">
-                    <Brain className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-gray-900">
-                      {parseAIFeatures(pkg.ai_features).length}
-                    </div>
-                    <div className="text-sm text-gray-600">Tính năng AI</div>
-                  </div>
-                </div>
 
+      {/* Available Packages */}
+      <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+        <h2 className="text-xl font-bold text-gray-800 mb-6">Chọn gói dịch vụ</h2>
+        {packages.length > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {packages.map((pkg) => (
+              <div key={pkg.id} className="flex flex-col border-2 border-gray-200 rounded-2xl p-6 bg-white hover:border-green-500 hover:shadow-xl transition-all duration-300">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">{pkg.name}</h3>
+                  <p className="text-gray-500 text-sm mb-4">{pkg.description || 'Gói dịch vụ giám sát thông minh'}</p>
+                  <div className="text-4xl font-extrabold text-green-600 mb-1">{formatPrice(pkg.price)}</div>
+                  <div className="text-base text-gray-600">/ {pkg.duration_days} ngày</div>
+                </div>
+                <div className="space-y-3 mb-8 flex-grow">
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg"><Camera className="w-5 h-5 text-green-600 mr-3" /><span>Giới hạn <strong className="text-gray-900">{pkg.camera_limit} camera</strong></span></div>
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg"><HardDrive className="w-5 h-5 text-blue-600 mr-3" /><span>Lưu trữ dữ liệu <strong className="text-gray-900">{pkg.storage_days} ngày</strong></span></div>
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg"><Brain className="w-5 h-5 text-purple-600 mr-3" /><span><strong className="text-gray-900">{parseAIFeatures(pkg.ai_features).length} tính năng AI</strong></span></div>
+                </div>
                 <div className="mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3 text-center">Tính năng AI bao gồm:</h4>
                   <div className="flex flex-wrap justify-center gap-2">
                     {parseAIFeatures(pkg.ai_features).map((feature: string, index: number) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium"
-                      >
-                        {feature}
-                      </span>
+                      <span key={index} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">{feature}</span>
                     ))}
                   </div>
                 </div>
-                
-                <button
-                  onClick={() => purchasePackage(pkg.id)}
-                  disabled={purchasing === pkg.id}
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                >
-                  {purchasing === pkg.id ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Đang xử lý...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="w-5 h-5" />
-                      <span>Mua gói dịch vụ</span>
-                    </>
+                <div className="space-y-2">
+                  <button onClick={() => purchasePackage(pkg.id)} disabled={purchasing === pkg.id} className="w-full mt-auto bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-all flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                    {purchasing === pkg.id ? (
+                      <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div><span>Đang xử lý...</span></>
+                    ) : (
+                      <><CreditCard className="w-5 h-5" /><span>Chọn gói này</span></>
+                    )}
+                  </button>
+                  
+                  {/* Check if there's a pending payment for this package */}
+                  {paymentHistory.some(p => p.package?.id === pkg.id && p.status === 'Pending') && (
+                    <button 
+                      onClick={() => {
+                        // Find the pending payment for this package
+                        const pendingPayment = paymentHistory.find(p => p.package?.id === pkg.id && p.status === 'Pending')
+                        if (pendingPayment) {
+                          // Create payment data for the pending payment
+                          const paymentData = {
+                            payment_id: pendingPayment.id,
+                            amount: pendingPayment.amount,
+                            package_name: pendingPayment.package?.name || pkg.name,
+                            order_id: pendingPayment.transaction_id,
+                            status: 'Pending'
+                          }
+                          // Store payment data in sessionStorage
+                          sessionStorage.setItem('current-payment', JSON.stringify(paymentData))
+                          console.log('Redirecting to complete pending payment:', paymentData)
+                        }
+                        window.location.href = `/payment/package/${pkg.id}`
+                      }}
+                      className="w-full bg-orange-500 text-white py-2 rounded-lg font-medium hover:bg-orange-600 transition-all flex items-center justify-center space-x-2 text-sm"
+                    >
+                      <CreditCard className="w-4 h-4" />
+                      <span>Hoàn tất giao dịch hiện tại</span>
+                    </button>
                   )}
-                </button>
+                </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Không có gói dịch vụ</h3>
-            <p className="text-gray-600">Hiện tại chưa có gói dịch vụ nào khả dụng</p>
-          </div>
+          <div className="text-center py-10 bg-gray-50 rounded-xl"><Package className="w-16 h-16 text-gray-400 mx-auto mb-4" /><h3 className="text-lg font-medium">Hiện chưa có gói dịch vụ nào</h3></div>
         )}
       </div>
 
       {/* Payment History */}
       {paymentHistory.length > 0 && (
-        <div className="card">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Lịch sử thanh toán</h2>
+        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+             <h2 className="text-xl font-bold text-gray-800 mb-2 sm:mb-0">Lịch sử thanh toán</h2>
+             <div className="flex space-x-2">
+               {paymentHistory.some(p => p.status === 'Pending') && (
+                 <button onClick={cancelPendingPayments} disabled={cancelling} className="flex items-center justify-center space-x-2 bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-200 transition-colors disabled:opacity-50">
+                   <XCircle className="w-5 h-5" />
+                   <span>Hủy giao dịch chờ</span>
+                 </button>
+               )}
+               {paymentHistory.some(p => p.status === 'Invalid') && (
+                 <button onClick={cleanupInvalidPayments} className="flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors">
+                   <XCircle className="w-5 h-5" />
+                   <span>Dọn dẹp lỗi</span>
+                 </button>
+               )}
+             </div>
+           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[600px]">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Gói dịch vụ</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Số tiền</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Trạng thái</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Ngày</th>
-                </tr>
+                <tr className="border-b"><th className="text-left py-3 px-2 font-semibold text-gray-600">Gói</th><th className="text-left py-3 px-2 font-semibold text-gray-600">Số tiền</th><th className="text-left py-3 px-2 font-semibold text-gray-600">Trạng thái</th><th className="text-left py-3 px-2 font-semibold text-gray-600">Ngày giao dịch</th></tr>
               </thead>
               <tbody>
                 {paymentHistory.map((payment) => (
                   <tr key={payment.id} className="border-b border-gray-100">
-                    <td className="py-3 px-4">
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {payment.package?.name || 'Gói không xác định'}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {payment.package?.duration_days} ngày
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 font-medium text-gray-900">
-                      {formatPrice(payment.amount)}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        payment.status === 'Success' 
-                          ? 'bg-green-100 text-green-700'
-                          : payment.status === 'Failed'
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {payment.status === 'Success' ? 'Thành công' :
-                         payment.status === 'Failed' ? 'Thất bại' : 'Đang xử lý'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-600">
-                      {formatDate(payment.transaction_date)}
-                    </td>
+                    <td className="py-3 px-2"><div className="font-medium text-gray-800">{payment.package?.name || 'N/A'}</div><div className="text-sm text-gray-500">{payment.package?.duration_days} ngày</div></td>
+                    <td className="py-3 px-2 font-medium text-gray-800">{formatPrice(payment.amount)}</td>
+                     <td className="py-3 px-2">
+                       <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                         payment.status === 'Success' ? 'bg-green-100 text-green-800' : 
+                         payment.status === 'Failed' ? 'bg-red-100 text-red-800' : 
+                         payment.status === 'Invalid' ? 'bg-gray-100 text-gray-800' :
+                         'bg-yellow-100 text-yellow-800'
+                       }`}>
+                         {payment.status === 'Success' ? 'Thành công' : 
+                          payment.status === 'Failed' ? 'Thất bại' : 
+                          payment.status === 'Invalid' ? 'Lỗi' :
+                          'Đang chờ'}
+                       </span>
+                     </td>
+                    <td className="py-3 px-2 text-sm text-gray-600">{formatDate(payment.transaction_date)}</td>
                   </tr>
                 ))}
               </tbody>

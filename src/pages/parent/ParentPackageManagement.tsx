@@ -30,9 +30,25 @@ interface PaymentHistory {
   }
 }
 
+interface PendingPayment {
+  id: number
+  amount: number
+  status: string
+  method: string
+  transaction_id: string
+  transaction_date: string
+  package: {
+    id: number
+    name: string
+    price: number
+    duration_days: number
+  }
+}
+
 const ParentPackageManagement: React.FC = () => {
   const [packages, setPackages] = useState<PackageData[]>([])
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([])
+  const [pendingPayment, setPendingPayment] = useState<PendingPayment | null>(null)
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState<number | null>(null)
   const [cancelling, setCancelling] = useState(false)
@@ -52,12 +68,31 @@ const ParentPackageManagement: React.FC = () => {
   const fetchPaymentHistory = async () => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch('/api/packages/user/payments', {
+      const response = await fetch('/api/package-service/user/payments', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (response.ok) setPaymentHistory(await response.json())
     } catch (error) {
       console.error('Error fetching payment history:', error)
+    }
+  }
+
+  const fetchPendingPayment = async () => {
+    try {
+      const token = localStorage.getItem('smart-child-token')
+      const response = await fetch('/api/package-service/user/pending-payment', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (data.has_pending) {
+          setPendingPayment(data.payment)
+        } else {
+          setPendingPayment(null)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching pending payment:', error)
     }
   }
 
@@ -78,8 +113,8 @@ const ParentPackageManagement: React.FC = () => {
         return
       }
       
-      console.log('Making purchase request to:', `/api/packages/${packageId}/purchase`)
-      const response = await fetch(`/api/packages/${packageId}/purchase`, {
+      console.log('Making purchase request to:', `/api/package-service/${packageId}/purchase`)
+      const response = await fetch(`/api/package-service/${packageId}/purchase`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -180,6 +215,64 @@ const ParentPackageManagement: React.FC = () => {
     }
   }
 
+  const retryPayment = async (paymentId: number) => {
+    try {
+      const token = localStorage.getItem('smart-child-token')
+      const response = await fetch(`/api/package-service/payment/${paymentId}/retry`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Retry payment response:', data)
+        
+        // Check if we have direct PayPOS URL
+        if (data.payment_url && data.status === "redirect_to_paypos") {
+          if (data.demo) {
+            // Demo mode - redirect to payment page instead of auto-redirect
+            showSuccess('Tạo link thanh toán thành công! Chuyển hướng đến trang thanh toán...')
+            const paymentData = {
+              payment_id: data.payment_id,
+              amount: data.amount,
+              package_name: data.package_name,
+              order_id: data.transaction_id || data.order_id,
+              status: 'Pending',
+              payment_url: data.payment_url,
+              demo: data.demo
+            }
+            sessionStorage.setItem('current-payment', JSON.stringify(paymentData))
+            setTimeout(() => {
+              window.location.href = `/payment/package/${data.package?.id || 'demo'}`
+            }, 1000)
+          } else {
+            // Real PayPOS - redirect directly
+            showSuccess('Chuyển hướng đến PayPOS...')
+            setTimeout(() => {
+              window.open(data.payment_url, '_blank')
+            }, 1000)
+          }
+        } else if (data.redirect_url) {
+          // Fallback to payment page
+          showSuccess('Chuyển hướng đến trang thanh toán...')
+          setTimeout(() => {
+            window.location.href = data.redirect_url
+          }, 1000)
+        } else {
+          showSuccess('Tạo link thanh toán thành công!')
+        }
+      } else {
+        const error = await response.json()
+        showError(error.detail || 'Không thể tạo link thanh toán')
+      }
+    } catch (error) {
+      showError('Lỗi kết nối')
+    }
+  }
+
   const cancelPendingPayments = async () => {
     setCancelling(true)
     try {
@@ -236,7 +329,7 @@ const ParentPackageManagement: React.FC = () => {
     const loadData = async () => {
       setLoading(true)
       // Xóa fetchCurrentPackage khỏi Promise.all
-      await Promise.all([fetchPackages(), fetchPaymentHistory()])
+      await Promise.all([fetchPackages(), fetchPaymentHistory(), fetchPendingPayment()])
       
       // Auto cleanup invalid and old pending payments
       try {
@@ -296,7 +389,61 @@ const ParentPackageManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* PHẦN GÓI DỊCH VỤ HIỆN TẠI ĐÃ BỊ XÓA */}
+      {/* Pending Payment */}
+      {pendingPayment && (
+        <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-6 shadow-md">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                <CreditCard className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-orange-800">Giao dịch đang chờ thanh toán</h3>
+                <p className="text-orange-600 text-sm">Bạn có một giao dịch chưa hoàn tất</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-bold text-orange-800">{formatPrice(pendingPayment.amount)}</div>
+              <div className="text-orange-600 text-sm">{pendingPayment.package.name}</div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="bg-white rounded-lg p-3">
+              <div className="text-sm text-gray-500">Mã giao dịch</div>
+              <div className="font-mono text-sm">{pendingPayment.transaction_id}</div>
+            </div>
+            <div className="bg-white rounded-lg p-3">
+              <div className="text-sm text-gray-500">Ngày tạo</div>
+              <div className="text-sm">{formatDate(pendingPayment.transaction_date)}</div>
+            </div>
+            <div className="bg-white rounded-lg p-3">
+              <div className="text-sm text-gray-500">Trạng thái</div>
+              <div className="text-sm text-orange-600 font-medium">Đang chờ thanh toán</div>
+            </div>
+          </div>
+          
+          <div className="flex space-x-3">
+            <button
+              onClick={() => retryPayment(pendingPayment.id)}
+              className="flex-1 bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors font-medium flex items-center justify-center space-x-2"
+            >
+              <CreditCard className="w-4 h-4" />
+              <span>Thanh toán lại</span>
+            </button>
+            <button
+              onClick={() => {
+                if (confirm('Bạn có chắc chắn muốn hủy giao dịch này?')) {
+                  cancelPendingPayments()
+                }
+              }}
+              className="px-6 py-3 border border-orange-300 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors font-medium"
+            >
+              Hủy giao dịch
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Available Packages */}
       <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">

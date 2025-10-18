@@ -1,7 +1,32 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Users, Camera, AlertTriangle, BarChart3, Activity, TrendingUp, Shield, Clock, CheckCircle } from 'lucide-react'
+import { adminApiService } from '../../services/adminApiService'
 
 const AdminDashboard: React.FC = () => {
+  const [dashboardStats, setDashboardStats] = useState<{
+    users: number
+    parents: number
+    schools: number
+    teachers: number
+  } | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        const stats = await adminApiService.getDashboardStats()
+        setDashboardStats(stats)
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardStats()
+  }, [])
+
+  // Dữ liệu tĩnh cho các phần khác (có thể thay thế bằng API khác sau)
   const systemStats = {
     totalChildren: 245,
     totalClasses: 12,
@@ -89,13 +114,15 @@ const AdminDashboard: React.FC = () => {
 
       {/* System Statistics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card bg-gradient-to-br from-amber-25 to-amber-50 border-amber-200">
+        <div className="card bg-gradient-to-br from-blue-25 to-blue-50 border-blue-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-amber-700 font-medium">Tổng số trẻ em</p>
-              <p className="text-2xl font-bold text-amber-900">{systemStats.totalChildren}</p>
+              <p className="text-sm text-blue-700 font-medium">Tổng số người dùng</p>
+              <p className="text-2xl font-bold text-blue-900">
+                {loading ? '...' : dashboardStats?.users || 0}
+              </p>
             </div>
-            <div className="p-3 bg-amber-500 rounded-full">
+            <div className="p-3 bg-blue-500 rounded-full">
               <Users className="w-6 h-6 text-white" />
             </div>
           </div>
@@ -104,23 +131,27 @@ const AdminDashboard: React.FC = () => {
         <div className="card bg-gradient-to-br from-green-25 to-green-50 border-green-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-green-700 font-medium">Lớp học đang hoạt động</p>
-              <p className="text-2xl font-bold text-green-900">{systemStats.totalClasses}</p>
+              <p className="text-sm text-green-700 font-medium">Phụ huynh</p>
+              <p className="text-2xl font-bold text-green-900">
+                {loading ? '...' : dashboardStats?.parents || 0}
+              </p>
             </div>
             <div className="p-3 bg-green-500 rounded-full">
-              <BarChart3 className="w-6 h-6 text-white" />
+              <Users className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="card bg-gradient-to-br from-yellow-25 to-yellow-50 border-yellow-200">
+        <div className="card bg-gradient-to-br from-purple-25 to-purple-50 border-purple-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-yellow-700 font-medium">Camera hoạt động</p>
-              <p className="text-2xl font-bold text-yellow-900">{systemStats.activeCameras}</p>
+              <p className="text-sm text-purple-700 font-medium">Trường học</p>
+              <p className="text-2xl font-bold text-purple-900">
+                {loading ? '...' : dashboardStats?.schools || 0}
+              </p>
             </div>
-            <div className="p-3 bg-yellow-500 rounded-full">
-              <Camera className="w-6 h-6 text-white" />
+            <div className="p-3 bg-purple-500 rounded-full">
+              <BarChart3 className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
@@ -128,11 +159,13 @@ const AdminDashboard: React.FC = () => {
         <div className="card bg-gradient-to-br from-orange-25 to-orange-50 border-orange-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-orange-700 font-medium">Cảnh báo hôm nay</p>
-              <p className="text-2xl font-bold text-orange-900">{systemStats.totalAlerts}</p>
+              <p className="text-sm text-orange-700 font-medium">Giáo viên</p>
+              <p className="text-2xl font-bold text-orange-900">
+                {loading ? '...' : dashboardStats?.teachers || 0}
+              </p>
             </div>
             <div className="p-3 bg-orange-500 rounded-full">
-              <AlertTriangle className="w-6 h-6 text-white" />
+              <Users className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
