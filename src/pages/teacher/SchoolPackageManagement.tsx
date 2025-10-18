@@ -74,7 +74,7 @@ const SchoolPackageManagement: React.FC = () => {
   const fetchPaymentHistory = async () => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch('http://127.0.0.1:8000/api/package-service/user/payments', {
+      const response = await fetch('http://127.0.0.1:8000/api/payments/user/2', {
         headers: {
           'Authorization': `Bearer ${token}`
         }

@@ -191,7 +191,7 @@ const PaymentPage: React.FC = () => {
       
       // Check if there's already a pending payment for this package
       console.log('Checking for existing pending payments for package:', packageData?.id)
-      const checkResponse = await fetch(`http://127.0.0.1:8000/api/packages/user/payments`, {
+      const checkResponse = await fetch(`http://127.0.0.1:8000/api/payments/user/2`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       

@@ -68,7 +68,8 @@ const ParentPackageManagement: React.FC = () => {
   const fetchPaymentHistory = async () => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch('http://127.0.0.1:8000/api/payments', {
+      const user = JSON.parse(localStorage.getItem('smart-child-user') || '{}')
+      const response = await fetch(`http://127.0.0.1:8000/api/payments/user/${user.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (response.ok) setPaymentHistory(await response.json())
@@ -80,7 +81,7 @@ const ParentPackageManagement: React.FC = () => {
   const fetchPendingPayment = async () => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch('http://127.0.0.1:8000/api/pending-payment', {
+      const response = await fetch('http://127.0.0.1:8000/api/package-service/user/pending-payment', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (response.ok) {
