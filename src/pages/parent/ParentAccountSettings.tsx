@@ -1,24 +1,109 @@
-import React, { useState } from 'react'
-import { User, Bell, Shield, Eye, EyeOff, Save } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { User, Shield, Eye, EyeOff, Save, Loader2, CheckCircle } from 'lucide-react'
+import { parentApiService, ParentProfile, ParentProfileUpdate, PasswordChange } from '../../services/parentApiService'
 
 const ParentAccountSettings: React.FC = () => {
+  // State management
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  
+  // Profile data
+  const [profile, setProfile] = useState<ParentProfile | null>(null)
+  const [profileForm, setProfileForm] = useState<ParentProfileUpdate>({})
+  
+  // Password change
   const [showPassword, setShowPassword] = useState(false)
-  const [notifications, setNotifications] = useState({
-    email: true,
-    sms: true,
-    push: true,
-    highPriority: true,
-    mediumPriority: true,
-    lowPriority: false
+  const [passwordForm, setPasswordForm] = useState<PasswordChange>({
+    current_password: '',
+    new_password: ''
   })
+  
 
-  const [alertPreferences, setAlertPreferences] = useState({
-    climbing: true,
-    wandering: true,
-    outOfZone: true,
-    collision: true,
-    quietTime: false
-  })
+  // Load data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        // Load profile data
+        const profileData = await parentApiService.getProfile()
+        
+        setProfile(profileData)
+        setProfileForm({
+          full_name: profileData.full_name,
+          phone: profileData.phone || '',
+          address: profileData.address || '',
+          emergency_contact: profileData.emergency_contact || '',
+          relationship: profileData.relationship || ''
+        })
+        
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tải dữ liệu')
+        console.error('Error loading settings:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  // Save all changes
+  const handleSaveAll = async () => {
+    try {
+      setSaving(true)
+      setError(null)
+      setSuccess(null)
+      
+      // Save profile changes
+      if (profileForm.full_name || profileForm.phone || profileForm.address || 
+          profileForm.emergency_contact || profileForm.relationship) {
+        await parentApiService.updateProfile(profileForm)
+      }
+      
+      // Save password if provided
+      if (passwordForm.current_password && passwordForm.new_password) {
+        await parentApiService.changePassword(passwordForm)
+        setPasswordForm({ current_password: '', new_password: '' })
+      }
+      
+      setSuccess('Đã lưu tất cả thay đổi thành công!')
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000)
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi lưu dữ liệu')
+      console.error('Error saving settings:', err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Handle profile form changes
+  const handleProfileChange = (field: keyof ParentProfileUpdate, value: string) => {
+    setProfileForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  // Handle password form changes
+  const handlePasswordChange = (field: keyof PasswordChange, value: string) => {
+    setPasswordForm(prev => ({ ...prev, [field]: value }))
+  }
+
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-amber-600" />
+          <p className="text-gray-600">Đang tải cài đặt...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -28,9 +113,38 @@ const ParentAccountSettings: React.FC = () => {
         <p className="text-amber-100">Quản lý tùy chọn tài khoản và cài đặt thông báo</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Error/Success Messages */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <CheckCircle className="h-5 w-5 text-green-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-green-800">{success}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-4xl mx-auto">
         {/* Profile Settings */}
-        <section className="lg:col-span-2 space-y-6">
+        <section className="space-y-6">
           <div className="card">
             <div className="flex items-center space-x-3 mb-6">
               <User className="w-6 h-6 text-amber-600" />
@@ -43,7 +157,8 @@ const ParentAccountSettings: React.FC = () => {
                 <input 
                   type="text" 
                   className="w-full px-5 py-4 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200 bg-white/80 backdrop-blur-sm text-gray-900 text-base" 
-                  defaultValue="Nguyễn Văn Minh" 
+                  value={profileForm.full_name || ''}
+                  onChange={(e) => handleProfileChange('full_name', e.target.value)}
                   title="Nhập họ và tên đầy đủ" 
                 />
               </div>
@@ -51,18 +166,31 @@ const ParentAccountSettings: React.FC = () => {
                 <label className="block text-base font-medium text-gray-800 mb-3">Địa chỉ Email</label>
                 <input 
                   type="email" 
-                  className="w-full px-5 py-4 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200 bg-white/80 backdrop-blur-sm text-gray-900 text-base" 
-                  defaultValue="minh.nguyen@example.com" 
-                  title="Nhập địa chỉ email" 
+                  className="w-full px-5 py-4 border border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all duration-200 bg-white/80 backdrop-blur-sm text-gray-900 text-base bg-gray-100" 
+                  value={profile?.email || ''}
+                  disabled
+                  title="Email không thể thay đổi" 
                 />
               </div>
               <div>
                 <label className="block text-base font-medium text-gray-800 mb-3">Số điện thoại</label>
-                <input type="tel" className="input-field" defaultValue="0901 234 567" title="Nhập số điện thoại" />
+                <input 
+                  type="tel" 
+                  className="input-field" 
+                  value={profileForm.phone || ''}
+                  onChange={(e) => handleProfileChange('phone', e.target.value)}
+                  title="Nhập số điện thoại" 
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Liên hệ khẩn cấp</label>
-                <input type="tel" className="input-field" defaultValue="0987 654 321" title="Nhập số điện thoại khẩn cấp" />
+                <input 
+                  type="tel" 
+                  className="input-field" 
+                  value={profileForm.emergency_contact || ''}
+                  onChange={(e) => handleProfileChange('emergency_contact', e.target.value)}
+                  title="Nhập số điện thoại khẩn cấp" 
+                />
               </div>
             </div>
           </div>
@@ -81,6 +209,8 @@ const ParentAccountSettings: React.FC = () => {
                     type={showPassword ? 'text' : 'password'}
                     className="input-field pr-10"
                     placeholder="Nhập mật khẩu hiện tại"
+                    value={passwordForm.current_password}
+                    onChange={(e) => handlePasswordChange('current_password', e.target.value)}
                     title="Nhập mật khẩu hiện tại của bạn"
                   />
                   <button
@@ -97,11 +227,23 @@ const ParentAccountSettings: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu mới</label>
-                  <input type="password" className="input-field" placeholder="Nhập mật khẩu mới" title="Nhập mật khẩu mới" />
+                  <input 
+                    type="password" 
+                    className="input-field" 
+                    placeholder="Nhập mật khẩu mới" 
+                    value={passwordForm.new_password}
+                    onChange={(e) => handlePasswordChange('new_password', e.target.value)}
+                    title="Nhập mật khẩu mới" 
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Xác nhận mật khẩu</label>
-                  <input type="password" className="input-field" placeholder="Xác nhận mật khẩu mới" title="Xác nhận mật khẩu mới" />
+                  <input 
+                    type="password" 
+                    className="input-field" 
+                    placeholder="Xác nhận mật khẩu mới" 
+                    title="Xác nhận mật khẩu mới" 
+                  />
                 </div>
               </div>
 
@@ -114,240 +256,23 @@ const ParentAccountSettings: React.FC = () => {
             </div>
           </div>
 
-          <div className="card">
-            <div className="flex items-center space-x-3 mb-6">
-              <Bell className="w-6 h-6 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-900">Tùy chọn thông báo</h2>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Phương thức gửi</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">Thông báo Email</span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={notifications.email}
-                        onChange={(e) => setNotifications({ ...notifications, email: e.target.checked })}
-                        title="Bật/tắt thông báo email"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">Thông báo SMS</span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={notifications.sms}
-                        onChange={(e) => setNotifications({ ...notifications, sms: e.target.checked })}
-                        title="Bật/tắt thông báo SMS"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">Thông báo đẩy</span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={notifications.push}
-                        onChange={(e) => setNotifications({ ...notifications, push: e.target.checked })}
-                        title="Bật/tắt thông báo đẩy"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Mức độ ưu tiên cảnh báo</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">Cảnh báo mức độ cao</span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={notifications.highPriority}
-                        onChange={(e) => setNotifications({ ...notifications, highPriority: e.target.checked })}
-                        title="Bật/tắt cảnh báo mức độ cao"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">Cảnh báo mức độ trung bình</span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={notifications.mediumPriority}
-                        onChange={(e) => setNotifications({ ...notifications, mediumPriority: e.target.checked })}
-                        title="Bật/tắt cảnh báo mức độ trung bình"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">Cảnh báo mức độ thấp</span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={notifications.lowPriority}
-                        onChange={(e) => setNotifications({ ...notifications, lowPriority: e.target.checked })}
-                        title="Bật/tắt cảnh báo mức độ thấp"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </section>
 
-        {/* Alert Preferences */}
-        <aside className="space-y-6">
-          <div className="card">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">🚨 Loại cảnh báo</h3>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Cảnh báo leo trèo</p>
-                  <p className="text-xs text-gray-500">Khi trẻ leo lên thiết bị</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={alertPreferences.climbing}
-                    onChange={(e) => setAlertPreferences({ ...alertPreferences, climbing: e.target.checked })}
-                    title="Bật/tắt cảnh báo leo trèo"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Cảnh báo lang thang</p>
-                  <p className="text-xs text-gray-500">Mô hình di chuyển bất thường</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={alertPreferences.wandering}
-                    onChange={(e) => setAlertPreferences({ ...alertPreferences, wandering: e.target.checked })}
-                    title="Bật/tắt cảnh báo lang thang"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Ra khỏi vùng</p>
-                  <p className="text-xs text-gray-500">Rời khỏi khu vực được chỉ định</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={alertPreferences.outOfZone}
-                    onChange={(e) => setAlertPreferences({ ...alertPreferences, outOfZone: e.target.checked })}
-                    title="Bật/tắt cảnh báo ra khỏi vùng"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Nguy cơ va chạm</p>
-                  <p className="text-xs text-gray-500">Sự cố an toàn tiềm ẩn</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={alertPreferences.collision}
-                    onChange={(e) => setAlertPreferences({ ...alertPreferences, collision: e.target.checked })}
-                    title="Bật/tắt cảnh báo nguy cơ va chạm"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Giờ yên tĩnh</p>
-                  <p className="text-xs text-gray-500">Thời gian hoạt động thấp</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={alertPreferences.quietTime}
-                    onChange={(e) => setAlertPreferences({ ...alertPreferences, quietTime: e.target.checked })}
-                    title="Bật/tắt cảnh báo giờ yên tĩnh"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">🔒 Cài đặt riêng tư</h3>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">Chia sẻ dữ liệu với giáo viên</span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only peer" defaultChecked title="Bật/tắt chia sẻ dữ liệu với giáo viên" />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">Cho phép ghi video</span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only peer" defaultChecked title="Bật/tắt quyền ghi video" />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">Lưu trữ dữ liệu (30 ngày)</span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only peer" defaultChecked title="Bật/tắt cài đặt lưu trữ dữ liệu" />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-            </div>
-          </div>
-        </aside>
       </div>
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <button className="btn-primary flex items-center space-x-2">
-          <Save className="w-4 h-4" />
-          <span>Lưu tất cả thay đổi</span>
+        <button 
+          onClick={handleSaveAll}
+          disabled={saving}
+          className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {saving ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Save className="w-4 h-4" />
+          )}
+          <span>{saving ? 'Đang lưu...' : 'Lưu tất cả thay đổi'}</span>
         </button>
       </div>
     </div>

@@ -36,7 +36,6 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     { to: '/parent/child-profile', icon: User, label: 'Hồ Sơ Con Em' },
     { to: '/parent/packages', icon: Package, label: 'Gói Dịch Vụ' },
     { to: '/parent/account', icon: Settings, label: 'Cài Đặt Tài Khoản' },
-    { to: '/parent/notifications', icon: MessageSquare, label: 'Tin Nhắn & Thông Báo' },
   ]
 
   const teacherNavItems = [

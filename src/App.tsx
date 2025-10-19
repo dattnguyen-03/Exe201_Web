@@ -17,7 +17,6 @@ import ParentDangerZoneMap from './pages/parent/ParentDangerZoneMap'
 import ParentChildProfile from './pages/parent/ParentChildProfile'
 import ParentPackageManagement from './pages/parent/ParentPackageManagement'
 import ParentAccountSettings from './pages/parent/ParentAccountSettings'
-import ParentNotifications from './pages/parent/ParentNotifications'
 
 // Teacher Pages
 import TeacherDashboard from './pages/teacher/TeacherDashboard'
@@ -71,7 +70,6 @@ function App() {
           <Route path="child-profile" element={<ParentChildProfile />} />
           <Route path="packages" element={<ParentPackageManagement />} />
           <Route path="account" element={<ParentAccountSettings />} />
-          <Route path="notifications" element={<ParentNotifications />} />
           </Route>
 
           {/* Teacher Routes */}

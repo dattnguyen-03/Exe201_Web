@@ -39,6 +39,45 @@ export interface ApiError {
   }>
 }
 
+export interface ParentProfile {
+  id: number
+  email: string
+  full_name: string
+  role: string
+  phone?: string
+  address?: string
+  emergency_contact?: string
+  relationship?: string
+}
+
+export interface ParentProfileUpdate {
+  full_name?: string
+  phone?: string
+  address?: string
+  emergency_contact?: string
+  relationship?: string
+}
+
+export interface PasswordChange {
+  current_password: string
+  new_password: string
+}
+
+export interface NotificationSettings {
+  email_notifications: boolean
+  climbing_alerts: boolean
+  wandering_alerts: boolean
+  out_of_zone_alerts: boolean
+  collision_alerts: boolean
+  quiet_hours: boolean
+}
+
+export interface PrivacySettings {
+  share_data_with_teachers: boolean
+  allow_video_recording: boolean
+  data_retention_30_days: boolean
+}
+
 class ParentApiService {
   private baseURL: string
 
@@ -270,6 +309,195 @@ class ParentApiService {
     const token = authService.getToken()
     const wsUrl = `ws://127.0.0.1:8000/api/streaming/camera/${cameraId}?token=${token}`
     return new WebSocket(wsUrl)
+  }
+
+  /**
+   * Lấy thông tin profile của parent
+   */
+  async getProfile(): Promise<ParentProfile> {
+    try {
+      const response = await fetch(`${this.baseURL}/api/parent/profile`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          authService.clearAuth()
+          window.location.href = '/login'
+          throw new Error('Unauthorized')
+        }
+        const errorData: ApiError = await response.json()
+        throw new Error(this.formatErrorMessage(errorData))
+      }
+
+      return await response.json()
+    } catch (error) {
+      this.handleError(error)
+    }
+  }
+
+  /**
+   * Cập nhật thông tin profile của parent
+   */
+  async updateProfile(profileData: ParentProfileUpdate): Promise<ParentProfile> {
+    try {
+      const response = await fetch(`${this.baseURL}/api/parent/profile`, {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify(profileData),
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          authService.clearAuth()
+          window.location.href = '/login'
+          throw new Error('Unauthorized')
+        }
+        const errorData: ApiError = await response.json()
+        throw new Error(this.formatErrorMessage(errorData))
+      }
+
+      const result = await response.json()
+      return result.profile
+    } catch (error) {
+      this.handleError(error)
+    }
+  }
+
+  /**
+   * Đổi mật khẩu của parent
+   */
+  async changePassword(passwordData: PasswordChange): Promise<void> {
+    try {
+      const response = await fetch(`${this.baseURL}/api/parent/change-password`, {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify(passwordData),
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          authService.clearAuth()
+          window.location.href = '/login'
+          throw new Error('Unauthorized')
+        }
+        const errorData: ApiError = await response.json()
+        throw new Error(this.formatErrorMessage(errorData))
+      }
+
+      await response.json()
+    } catch (error) {
+      this.handleError(error)
+    }
+  }
+
+  /**
+   * Lấy cài đặt thông báo của parent
+   */
+  async getNotificationSettings(): Promise<NotificationSettings> {
+    try {
+      const response = await fetch(`${this.baseURL}/api/parent/notification-settings`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          authService.clearAuth()
+          window.location.href = '/login'
+          throw new Error('Unauthorized')
+        }
+        const errorData: ApiError = await response.json()
+        throw new Error(this.formatErrorMessage(errorData))
+      }
+
+      return await response.json()
+    } catch (error) {
+      this.handleError(error)
+    }
+  }
+
+  /**
+   * Cập nhật cài đặt thông báo của parent
+   */
+  async updateNotificationSettings(settings: NotificationSettings): Promise<NotificationSettings> {
+    try {
+      const response = await fetch(`${this.baseURL}/api/parent/notification-settings`, {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify(settings),
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          authService.clearAuth()
+          window.location.href = '/login'
+          throw new Error('Unauthorized')
+        }
+        const errorData: ApiError = await response.json()
+        throw new Error(this.formatErrorMessage(errorData))
+      }
+
+      const result = await response.json()
+      return result.settings
+    } catch (error) {
+      this.handleError(error)
+    }
+  }
+
+  /**
+   * Lấy cài đặt riêng tư của parent
+   */
+  async getPrivacySettings(): Promise<PrivacySettings> {
+    try {
+      const response = await fetch(`${this.baseURL}/api/parent/privacy-settings`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          authService.clearAuth()
+          window.location.href = '/login'
+          throw new Error('Unauthorized')
+        }
+        const errorData: ApiError = await response.json()
+        throw new Error(this.formatErrorMessage(errorData))
+      }
+
+      return await response.json()
+    } catch (error) {
+      this.handleError(error)
+    }
+  }
+
+  /**
+   * Cập nhật cài đặt riêng tư của parent
+   */
+  async updatePrivacySettings(settings: PrivacySettings): Promise<PrivacySettings> {
+    try {
+      const response = await fetch(`${this.baseURL}/api/parent/privacy-settings`, {
+        method: 'PUT',
+        headers: this.getHeaders(),
+        body: JSON.stringify(settings),
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          authService.clearAuth()
+          window.location.href = '/login'
+          throw new Error('Unauthorized')
+        }
+        const errorData: ApiError = await response.json()
+        throw new Error(this.formatErrorMessage(errorData))
+      }
+
+      const result = await response.json()
+      return result.settings
+    } catch (error) {
+      this.handleError(error)
+    }
   }
 }
 
