@@ -1,9 +1,98 @@
-import React, { useState } from 'react'
-import { MessageSquare, Send, Phone, Mail, Bell, Clock, User, AlertTriangle } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { MessageSquare, Send, Phone, Mail, Bell, Clock, User, AlertTriangle, Download, Loader2 } from 'lucide-react'
+import { parentApiService, Alert } from '../../services/parentApiService'
 
 const ParentNotifications: React.FC = () => {
   const [activeTab, setActiveTab] = useState('messages')
   const [newMessage, setNewMessage] = useState('')
+  const [alerts, setAlerts] = useState<Alert[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [exporting, setExporting] = useState(false)
+
+  // Load alerts data
+  useEffect(() => {
+    const loadAlerts = async () => {
+      try {
+        setLoading(true)
+        const data = await parentApiService.getAlerts()
+        setAlerts(data)
+        setError(null)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Có lỗi xảy ra')
+        console.error('Error loading alerts:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadAlerts()
+  }, [])
+
+  // Export alerts to CSV
+  const exportAlertsToCSV = async () => {
+    try {
+      setExporting(true)
+      const csvContent = generateCSV(alerts)
+      downloadCSV(csvContent, 'alerts-export.csv')
+    } catch (err) {
+      console.error('Error exporting alerts:', err)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  // Generate CSV content
+  const generateCSV = (alerts: Alert[]): string => {
+    const headers = ['ID', 'Loại cảnh báo', 'Mức độ', 'Trạng thái', 'Thời gian tạo', 'Camera ID', 'Vùng nguy hiểm']
+    const rows = alerts.map(alert => [
+      alert.id,
+      alert.alert_type,
+      getSeverityText(alert.severity),
+      alert.acknowledged ? 'Đã xử lý' : 'Chờ xử lý',
+      new Date(alert.created_at).toLocaleString('vi-VN'),
+      alert.camera_id || 'N/A',
+      alert.danger_zone_id || 'N/A'
+    ])
+    
+    return [headers, ...rows].map(row => row.join(',')).join('\n')
+  }
+
+  // Download CSV file
+  const downloadCSV = (content: string, filename: string) => {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', filename)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  // Helper functions
+  const getSeverityText = (severity: number): string => {
+    if (severity >= 3) return 'Cao'
+    if (severity >= 2) return 'Trung bình'
+    return 'Thấp'
+  }
+
+  const getSeverityColor = (severity: number): string => {
+    if (severity >= 3) return 'bg-red-100 text-red-700'
+    if (severity >= 2) return 'bg-yellow-100 text-yellow-700'
+    return 'bg-gray-100 text-gray-700'
+  }
+
+  const formatTime = (dateString: string): string => {
+    const date = new Date(dateString)
+    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('vi-VN')
+  }
 
   const messages = [
     {
@@ -44,32 +133,16 @@ const ParentNotifications: React.FC = () => {
     }
   ]
 
-  const notifications = [
-    {
-      id: 1,
-      title: 'Cảnh báo mức độ cao',
-      message: 'Phát hiện hành vi leo trèo tại khu vực sân chơi',
-      timestamp: '1 giờ trước',
-      priority: 'high',
-      read: false
-    },
-    {
-      id: 2,
-      title: 'Báo cáo tuần sẵn sàng',
-      message: 'Phân tích hành vi hàng tuần của con em đã có',
-      timestamp: '3 giờ trước',
-      priority: 'medium',
-      read: false
-    },
-    {
-      id: 3,
-      title: 'Cập nhật hệ thống',
-      message: 'Bảo trì hệ thống camera đã hoàn thành thành công',
-      timestamp: '6 giờ trước',
-      priority: 'low',
-      read: true
-    }
-  ]
+  // Convert alerts to notifications format
+  const notifications = alerts.map(alert => ({
+    id: alert.id,
+    title: alert.alert_type,
+    message: `Cảnh báo từ hệ thống AI giám sát - Camera ID: ${alert.camera_id || 'N/A'}`,
+    timestamp: formatTime(alert.created_at) + ' - ' + formatDate(alert.created_at),
+    priority: alert.severity >= 3 ? 'high' : alert.severity >= 2 ? 'medium' : 'low',
+    read: alert.acknowledged,
+    alert: alert
+  }))
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -238,7 +311,49 @@ const ParentNotifications: React.FC = () => {
 
       {activeTab === 'notifications' && (
         <div className="space-y-4">
-          {notifications.map((notification) => (
+          {/* Export Button */}
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Thông báo cảnh báo</h3>
+            <button
+              onClick={exportAlertsToCSV}
+              disabled={exporting || alerts.length === 0}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {exporting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              <span>Xuất CSV</span>
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+                <p className="text-gray-600">Đang tải thông báo...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <AlertTriangle className="w-8 h-8 mx-auto mb-4 text-red-600" />
+              <p className="text-red-600 mb-4">{error}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="btn-primary"
+              >
+                Thử lại
+              </button>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="text-center py-12">
+              <Bell className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Không có thông báo nào</h3>
+              <p className="text-gray-500">Tất cả đều an toàn! 🎉</p>
+            </div>
+          ) : (
+            notifications.map((notification) => (
             <article key={notification.id} className={`card cursor-pointer transition-colors hover:bg-gray-50 ${!notification.read ? 'border-blue-200 bg-blue-50' : ''
               }`}>
               <div className="flex items-start space-x-4">
@@ -270,18 +385,37 @@ const ParentNotifications: React.FC = () => {
 
                   <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
 
-                  <div className="mt-2">
+                  <div className="mt-2 flex items-center justify-between">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${notification.priority === 'high' ? 'bg-red-100 text-red-700' :
                         notification.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
                           'bg-gray-100 text-gray-700'
                       }`}>
                       Mức độ {notification.priority === 'high' ? 'cao' : notification.priority === 'medium' ? 'trung bình' : 'thấp'}
                     </span>
+                    {!notification.read && notification.alert && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            await parentApiService.acknowledgeAlert(notification.alert.id)
+                            // Update local state
+                            setAlerts(prev => prev.map(alert => 
+                              alert.id === notification.alert.id ? { ...alert, acknowledged: true } : alert
+                            ))
+                          } catch (err) {
+                            console.error('Error acknowledging alert:', err)
+                          }
+                        }}
+                        className="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-xs font-medium"
+                      >
+                        Xác nhận đã xử lý
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
             </article>
-          ))}
+            ))
+          )}
         </div>
       )}
     </div>

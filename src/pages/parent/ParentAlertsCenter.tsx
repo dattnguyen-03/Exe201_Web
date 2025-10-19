@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { AlertTriangle, Clock, MapPin, Camera, Filter, CheckCircle, X, Search, Loader2 } from 'lucide-react'
+import { AlertTriangle, Clock, MapPin, Camera, Filter, CheckCircle, X, Search, Loader2, Download } from 'lucide-react'
 import { parentApiService, Alert } from '../../services/parentApiService'
 import { authService } from '../../services/authService'
 
@@ -10,6 +10,7 @@ const ParentAlertsCenter: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [acknowledging, setAcknowledging] = useState<number | null>(null)
+  const [exporting, setExporting] = useState(false)
 
   // Load alerts data
   useEffect(() => {
@@ -45,6 +46,48 @@ const ParentAlertsCenter: React.FC = () => {
     } finally {
       setAcknowledging(null)
     }
+  }
+
+  // Export alerts to CSV
+  const exportAlertsToCSV = async () => {
+    try {
+      setExporting(true)
+      const csvContent = generateCSV(alerts)
+      downloadCSV(csvContent, 'alerts-export.csv')
+    } catch (err) {
+      console.error('Error exporting alerts:', err)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  // Generate CSV content
+  const generateCSV = (alerts: Alert[]): string => {
+    const headers = ['ID', 'Loại cảnh báo', 'Mức độ', 'Trạng thái', 'Thời gian tạo', 'Camera ID', 'Vùng nguy hiểm']
+    const rows = alerts.map(alert => [
+      alert.id,
+      alert.alert_type,
+      getSeverityText(alert.severity),
+      alert.acknowledged ? 'Đã xử lý' : 'Chờ xử lý',
+      new Date(alert.created_at).toLocaleString('vi-VN'),
+      alert.camera_id || 'N/A',
+      alert.danger_zone_id || 'N/A'
+    ])
+    
+    return [headers, ...rows].map(row => row.join(',')).join('\n')
+  }
+
+  // Download CSV file
+  const downloadCSV = (content: string, filename: string) => {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', filename)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   // Helper functions
@@ -301,8 +344,16 @@ const ParentAlertsCenter: React.FC = () => {
             <span className="text-sm font-medium text-purple-700">Tìm kiếm nâng cao</span>
           </button>
 
-          <button className="p-4 bg-green-50 hover:bg-green-100 rounded-xl text-center transition-colors group">
-            <Filter className="w-8 h-8 text-green-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+          <button 
+            onClick={exportAlertsToCSV}
+            disabled={exporting || alerts.length === 0}
+            className="p-4 bg-green-50 hover:bg-green-100 rounded-xl text-center transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {exporting ? (
+              <Loader2 className="w-8 h-8 text-green-600 mx-auto mb-2 animate-spin" />
+            ) : (
+              <Download className="w-8 h-8 text-green-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+            )}
             <span className="text-sm font-medium text-green-700">Xuất báo cáo</span>
           </button>
         </div>
