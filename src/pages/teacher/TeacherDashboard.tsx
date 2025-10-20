@@ -549,51 +549,40 @@ const TeacherDashboard: React.FC = () => {
               <Bell className="h-5 w-5 text-blue-600" />
             </div>
             
-            {/* Real API Alerts */}
-            {apiAlerts.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">🚨 Cảnh báo  ({apiAlerts.length})</h3>
-                <div className="space-y-3">
-                  {apiAlerts.slice(0, 3).map((alert) => (
-                    <div key={alert.id} className="p-3 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
-                      <div className="flex items-start">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{alert.alert_type}</p>
-                          <div className="flex items-center justify-between mt-1">
-                            <p className="text-xs text-gray-600">Mức độ: {alert.severity}</p>
-                            <p className="text-xs text-gray-500">
-                              {new Date(alert.created_at).toLocaleString('vi-VN')}
-                            </p>
-                          </div>
-                          {alert.acknowledged && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
-                              Đã xác nhận
-                            </span>
-                          )}
+
+            {/* API Alerts styled like sample alerts */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-700">🚨 Cảnh báo & Thông báo</h3>
+              {apiAlerts.length === 0 && (
+                <div className="text-gray-500 text-sm">Không có cảnh báo nào.</div>
+              )}
+              {apiAlerts.slice(0, 3).map((alert) => {
+                const studentName = students.find(s => s.id === alert.child_id)?.full_name || 'Học sinh';
+                return (
+                  <div
+                    key={alert.id}
+                    className={`p-4 border-l-4 rounded-r-lg ${
+                      alert.severity === 3
+                        ? 'border-l-red-500 bg-red-50'
+                        : alert.severity === 2
+                        ? 'border-l-yellow-500 bg-yellow-50'
+                        : 'border-l-green-500 bg-green-50'
+                    }`}
+                  >
+                    <div className="flex items-start">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">
+                          {alert.alert_type}
+                        </p>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-xs text-gray-600">{studentName}</p>
+                          <p className="text-xs text-gray-500">{new Date(alert.created_at).toLocaleString('vi-VN')}</p>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Sample Alerts */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700">📋 Cảnh báo mẫu</h3>
-              {alerts.map((alert) => (
-                <div key={alert.id} className={`p-4 border-l-4 rounded-r-lg ${getAlertColor(alert.severity)}`}>
-                  <div className="flex items-start">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{alert.message}</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="text-xs text-gray-600">{alert.student}</p>
-                        <p className="text-xs text-gray-500">{alert.time}</p>
-                      </div>
-                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <button className="w-full mt-4 text-blue-600 hover:text-blue-700 font-medium text-sm py-2 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
