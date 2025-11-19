@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Package, CreditCard, Camera, HardDrive, Brain, XCircle } from 'lucide-react'
 import { showSuccess, showError, showWarning } from '../../utils/swal'
 
@@ -46,12 +47,14 @@ interface PendingPayment {
 }
 
 const ParentPackageManagement: React.FC = () => {
+  const location = useLocation()
   const [packages, setPackages] = useState<PackageData[]>([])
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([])
   const [pendingPayment, setPendingPayment] = useState<PendingPayment | null>(null)
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState<number | null>(null)
   const [cancelling, setCancelling] = useState(false)
+  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // --- Functions (đã xóa fetchCurrentPackage) ---
 
@@ -95,6 +98,28 @@ const ParentPackageManagement: React.FC = () => {
     } catch (error) {
       console.error('Error fetching pending payment:', error)
     }
+  }
+
+  // Check payment status by orderCode (khi quay lại từ payment success page)
+  const checkPaymentStatusByOrderCode = async (orderCode: string) => {
+    try {
+      const token = localStorage.getItem('smart-child-token')
+      const response = await fetch(`https://safenestai.onrender.com/api/paypos/status/${orderCode}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.payment) {
+          // Payment status đã được update, refresh payment history
+          await fetchPaymentHistory()
+          await fetchPendingPayment()
+          return true
+        }
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error)
+    }
+    return false
   }
 
   const purchasePackage = async (packageId: number) => {
@@ -329,6 +354,19 @@ const ParentPackageManagement: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true)
+      
+      // Check nếu có orderCode trong URL params (từ payment success page)
+      const searchParams = new URLSearchParams(location.search)
+      const orderCode = searchParams.get('orderCode')
+      const status = searchParams.get('status')
+      
+      if (orderCode && status === 'PAID') {
+        // Nếu vừa từ payment success page về, check payment status ngay
+        await checkPaymentStatusByOrderCode(orderCode)
+        // Clear URL params sau khi check
+        window.history.replaceState({}, '', location.pathname)
+      }
+      
       // Xóa fetchCurrentPackage khỏi Promise.all
       await Promise.all([fetchPackages(), fetchPaymentHistory(), fetchPendingPayment()])
       
@@ -349,7 +387,8 @@ const ParentPackageManagement: React.FC = () => {
         })
         
         // Refresh payment history after cleanup
-        fetchPaymentHistory()
+        await fetchPaymentHistory()
+        await fetchPendingPayment()
       } catch (error) {
         console.log('Auto cleanup failed:', error)
       }
@@ -357,7 +396,24 @@ const ParentPackageManagement: React.FC = () => {
       setLoading(false)
     }
     loadData()
-  }, [])
+
+    // Auto-refresh payment history mỗi 5 giây nếu có pending payments
+    refreshIntervalRef.current = setInterval(() => {
+      // Check lại payment history và pending payment để refresh nếu có pending
+      fetchPaymentHistory().then(() => {
+        fetchPendingPayment().then(() => {
+          // Nếu vẫn còn pending, sẽ tự động refresh lại sau 5 giây
+        })
+      })
+    }, 5000) // Refresh mỗi 5 giây
+
+    return () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search])
   
   // --- Helper Functions ---
   const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price)
