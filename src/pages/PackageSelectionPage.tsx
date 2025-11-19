@@ -33,7 +33,7 @@ const PackageSelectionPage: React.FC = () => {
   // Fetch packages
   const fetchPackages = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/packages')
+      const response = await fetch('https://safenestai.onrender.com/api/packages')
       if (response.ok) {
         const data = await response.json()
         setPackages(data)
@@ -53,7 +53,7 @@ const PackageSelectionPage: React.FC = () => {
       const token = localStorage.getItem('smart-child-token')
       if (!token) return
       
-      const response = await fetch('http://127.0.0.1:8000/api/paypos/user/pending', {
+      const response = await fetch('https://safenestai.onrender.com/api/paypos/user/pending', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -72,7 +72,7 @@ const PackageSelectionPage: React.FC = () => {
   const cancelPendingPayment = async (paymentId: number) => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch(`http://127.0.0.1:8000/api/paypos/cancel/${paymentId}`, {
+      const response = await fetch(`https://safenestai.onrender.com/api/paypos/cancel/${paymentId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

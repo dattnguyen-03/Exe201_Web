@@ -114,8 +114,8 @@ const ParentPackageManagement: React.FC = () => {
         return
       }
       
-      console.log('Making purchase request to:', `http://127.0.0.1:8000/api/package-service/${packageId}/purchase`)
-      const response = await fetch(`http://127.0.0.1:8000/api/package-service/${packageId}/purchase`, {
+      console.log('Making purchase request to:', `https://safenestai.onrender.com/api/package-service/${packageId}/purchase`)
+      const response = await fetch(`https://safenestai.onrender.com/api/package-service/${packageId}/purchase`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -219,7 +219,7 @@ const ParentPackageManagement: React.FC = () => {
   const retryPayment = async (paymentId: number) => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch(`http://127.0.0.1:8000/api/package-service/payment/${paymentId}/retry`, {
+      const response = await fetch(`https://safenestai.onrender.com/api/package-service/payment/${paymentId}/retry`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -309,7 +309,7 @@ const ParentPackageManagement: React.FC = () => {
   const cleanupInvalidPayments = async () => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch('http://127.0.0.1:8000/api/packages/cleanup-invalid-payments', {
+      const response = await fetch('https://safenestai.onrender.com/api/packages/cleanup-invalid-payments', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -337,13 +337,13 @@ const ParentPackageManagement: React.FC = () => {
         const token = localStorage.getItem('smart-child-token')
         
         // Cleanup invalid payments
-        await fetch('http://127.0.0.1:8000/api/packages/cleanup-invalid-payments', {
+        await fetch('https://safenestai.onrender.com/api/packages/cleanup-invalid-payments', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` }
         })
         
         // Force cleanup old pending payments (older than 5 minutes)
-        await fetch('http://127.0.0.1:8000/api/packages/force-cleanup-pending', {
+        await fetch('https://safenestai.onrender.com/api/packages/force-cleanup-pending', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` }
         })
