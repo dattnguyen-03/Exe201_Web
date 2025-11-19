@@ -54,10 +54,15 @@ const ParentLiveView: React.FC = () => {
         setRunning(false);
       });
   
-    // Mở WebSocket - sử dụng port 8888 (Violence Detection server)
+    // Mở WebSocket - Violence Detection server
+    // ⚠️ LƯU Ý: Đây là server riêng cho AI detection, cần cấu hình URL production
+    // TODO: Tạo config cho VIOLENCE_DETECTION_WS_URL hoặc dùng environment variable
+    // ⚠️ TODO: Cấu hình URL production cho Violence Detection server
+    // Tạm thời dùng localhost cho development
+    const VIOLENCE_DETECTION_WS_URL = "ws://localhost:8888/ws/detect";
     try {
       setConnectionStatus('connecting');
-      ws = new WebSocket("ws://localhost:8888/ws/detect");
+      ws = new WebSocket(VIOLENCE_DETECTION_WS_URL);
       
       // Set timeout để kiểm tra kết nối
       const connectionTimeout = setTimeout(() => {
@@ -88,7 +93,10 @@ const ParentLiveView: React.FC = () => {
           setTimeout(() => {
             if (running) {
               // Retry connection
-              const retryWs = new WebSocket("ws://localhost:8888/ws/detect");
+              // ⚠️ TODO: Cấu hình URL production cho Violence Detection server
+    // Tạm thời dùng localhost cho development
+    const VIOLENCE_DETECTION_WS_URL = "ws://localhost:8888/ws/detect";
+              const retryWs = new WebSocket(VIOLENCE_DETECTION_WS_URL);
               retryWs.onopen = () => {
                 console.log("✅ WebSocket reconnected");
                 setConnectionStatus('connected');

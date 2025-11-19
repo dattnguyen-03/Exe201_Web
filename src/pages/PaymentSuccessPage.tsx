@@ -1,38 +1,101 @@
 import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { CheckCircle, Package, Calendar, CreditCard, Home } from 'lucide-react'
 import { showSuccess, showError } from '../utils/swal'
 
 const PaymentSuccessPage: React.FC = () => {
   const { paymentId } = useParams<{ paymentId: string }>()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [paymentInfo, setPaymentInfo] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-  // Fetch payment status
-  const fetchPaymentStatus = async () => {
+  // Đọc status và orderCode từ URL params (PayOS redirect về)
+  const urlStatus = searchParams.get('status') // PAID, CANCELLED, etc.
+  const orderCode = searchParams.get('orderCode')
+  const payosCode = searchParams.get('code') // PayOS response code
+
+  // Check payment status by orderCode nếu có từ PayOS
+  const checkPaymentByOrderCode = async (orderCode: string) => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch(`https://safenestai.onrender.com/api/payments/${paymentId}`, {
+      const response = await fetch(`https://safenestai.onrender.com/api/paypos/status/${orderCode}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
       if (response.ok) {
         const data = await response.json()
-        setPaymentInfo(data)
+        if (data.success && data.payment) {
+          // Update paymentInfo với thông tin mới nhất
+          setPaymentInfo({
+            ...data.payment,
+            status: data.payment.status === 'Success' ? 'Success' : 
+                    data.payment.status === 'Failed' ? 'Failed' : 'Pending'
+          })
+          return data.payment
+        }
+      }
+    } catch (error) {
+      console.error('Error checking payment by orderCode:', error)
+    }
+    return null
+  }
+
+  // Fetch payment status
+  const fetchPaymentStatus = async () => {
+    try {
+      const token = localStorage.getItem('smart-child-token')
+      
+      // Nếu có orderCode từ URL (PayOS redirect), check bằng orderCode trước
+      let payment = null
+      if (orderCode) {
+        payment = await checkPaymentByOrderCode(orderCode)
+      }
+      
+      // Nếu không tìm thấy hoặc không có orderCode, fetch bằng paymentId
+      if (!payment && paymentId) {
+        const response = await fetch(`https://safenestai.onrender.com/api/payments/${paymentId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        if (response.ok) {
+          payment = await response.json()
+        }
+      }
+      
+      if (payment && typeof payment === 'object') {
+        const paymentData: any = payment
         
-        if (data.status === 'Success') {
+        // Nếu URL có status=PAID nhưng DB chưa update, hiển thị success tạm thời
+        if (urlStatus === 'PAID' && payosCode === '00' && paymentData.status !== 'Success') {
+          // PayOS đã confirm thanh toán thành công, nhưng webhook chưa chạy
+          // Cập nhật status tạm thời để hiển thị success ngay
+          const updatedPayment = { ...paymentData, status: 'Success' }
+          setPaymentInfo(updatedPayment)
+          // Trigger refresh để check lại sau 2 giây
+          setTimeout(() => {
+            fetchPaymentStatus()
+          }, 2000)
+          return
+        }
+        
+        setPaymentInfo(paymentData)
+        
+        if (paymentData.status === 'Success') {
           showSuccess('Thanh toán thành công! Gói dịch vụ đã được kích hoạt.')
-        } else if (data.status === 'Failed') {
+        } else if (paymentData.status === 'Failed') {
           showError('Thanh toán thất bại. Vui lòng thử lại.')
-        } else {
-          showError('Thanh toán đang được xử lý. Vui lòng chờ...')
+        } else if (urlStatus === 'PAID' && payosCode === '00') {
+          // URL confirm success nhưng DB chưa update - đang chờ webhook
+          console.log('Payment confirmed by PayOS, waiting for webhook update...')
         }
       } else {
         showError('Không thể tải thông tin thanh toán')
       }
     } catch (error) {
+      console.error('Error fetching payment status:', error)
       showError('Lỗi kết nối')
     } finally {
       setLoading(false)
@@ -40,12 +103,24 @@ const PaymentSuccessPage: React.FC = () => {
   }
 
   useEffect(() => {
-    if (paymentId) {
-      fetchPaymentStatus()
-    } else {
+    if (!paymentId && !orderCode) {
       navigate('/')
+      return
     }
-  }, [paymentId])
+    
+    fetchPaymentStatus()
+  }, [paymentId, orderCode, urlStatus, payosCode])
+  
+  // Auto-refresh nếu payment đang pending hoặc URL confirm success nhưng DB chưa update
+  useEffect(() => {
+    if (!paymentInfo || paymentInfo.status === 'Pending' || (urlStatus === 'PAID' && payosCode === '00' && paymentInfo.status !== 'Success')) {
+      const interval = setInterval(() => {
+        fetchPaymentStatus()
+      }, 3000) // Refresh mỗi 3 giây
+      
+      return () => clearInterval(interval)
+    }
+  }, [paymentInfo, urlStatus, payosCode])
 
   // Format price
   const formatPrice = (price: number) => {
