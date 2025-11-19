@@ -280,13 +280,13 @@ const ParentPackageManagement: React.FC = () => {
       const token = localStorage.getItem('smart-child-token')
       
       // First try to force cleanup old pending payments
-      const cleanupResponse = await fetch('/api/packages/force-cleanup-pending', {
+      const cleanupResponse = await fetch('https://safenestai.onrender.com/api/packages/force-cleanup-pending', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       })
       
       // Then cancel remaining pending payments
-      const response = await fetch('/api/payments/cancel-pending', {
+      const response = await fetch('https://safenestai.onrender.com/api/payments/cancel-pending', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       })
