@@ -13,7 +13,7 @@ const PaymentSuccessPage: React.FC = () => {
   const fetchPaymentStatus = async () => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch(`/api/payments/${paymentId}`, {
+      const response = await fetch(`https://safenestai.onrender.com/api/payments/${paymentId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
