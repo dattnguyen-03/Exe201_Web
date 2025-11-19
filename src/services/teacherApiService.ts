@@ -413,12 +413,16 @@ class TeacherApiService {
   // WebSocket connections
   connectToAlertsWebSocket(): WebSocket {
     const token = authService.getToken();
-    return new WebSocket(`ws://127.0.0.1:8000/api/streaming/alerts?token=${token}`);
+    // Sử dụng wss:// cho production (HTTPS)
+    const wsUrl = API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://');
+    return new WebSocket(`${wsUrl}/api/streaming/alerts?token=${token}`);
   }
 
   connectToCameraWebSocket(cameraId: number): WebSocket {
     const token = authService.getToken();
-    return new WebSocket(`ws://127.0.0.1:8000/api/streaming/camera/${cameraId}?token=${token}`);
+    // Sử dụng wss:// cho production (HTTPS)
+    const wsUrl = API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://');
+    return new WebSocket(`${wsUrl}/api/streaming/camera/${cameraId}?token=${token}`);
   }
 }
 

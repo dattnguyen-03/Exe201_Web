@@ -298,8 +298,9 @@ class ParentApiService {
    */
   connectAlertsWebSocket(): WebSocket {
     const token = authService.getToken()
-    const wsUrl = `ws://127.0.0.1:8000/api/streaming/alerts?token=${token}`
-    return new WebSocket(wsUrl)
+    // Sử dụng wss:// cho production (HTTPS)
+    const wsUrl = API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://')
+    return new WebSocket(`${wsUrl}/api/streaming/alerts?token=${token}`)
   }
 
   /**
@@ -307,8 +308,9 @@ class ParentApiService {
    */
   connectCameraWebSocket(cameraId: number): WebSocket {
     const token = authService.getToken()
-    const wsUrl = `ws://127.0.0.1:8000/api/streaming/camera/${cameraId}?token=${token}`
-    return new WebSocket(wsUrl)
+    // Sử dụng wss:// cho production (HTTPS)
+    const wsUrl = API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://')
+    return new WebSocket(`${wsUrl}/api/streaming/camera/${cameraId}?token=${token}`)
   }
 
   /**
