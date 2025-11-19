@@ -57,7 +57,7 @@ const ParentPackageManagement: React.FC = () => {
 
   const fetchPackages = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/packages')
+      const response = await fetch('https://safenestai.onrender.com/api/packages')
       if (response.ok) setPackages(await response.json())
       else showError('Không thể tải danh sách gói dịch vụ')
     } catch (error) {
@@ -69,7 +69,7 @@ const ParentPackageManagement: React.FC = () => {
     try {
       const token = localStorage.getItem('smart-child-token')
       const user = JSON.parse(localStorage.getItem('smart-child-user') || '{}')
-      const response = await fetch(`http://127.0.0.1:8000/api/payments/user/${user.id}`, {
+      const response = await fetch(`https://safenestai.onrender.com/api/payments/user/${user.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (response.ok) setPaymentHistory(await response.json())
@@ -81,7 +81,7 @@ const ParentPackageManagement: React.FC = () => {
   const fetchPendingPayment = async () => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch('http://127.0.0.1:8000/api/package-service/user/pending-payment', {
+      const response = await fetch('https://safenestai.onrender.com/api/package-service/user/pending-payment', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (response.ok) {
