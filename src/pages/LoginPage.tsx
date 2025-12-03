@@ -180,7 +180,7 @@ const LoginPage: React.FC = () => {
                 </form>
 
                 {/* Demo Accounts */}
-                <div className="mt-8 pt-6 border-t border-gray-200">
+                {/* <div className="mt-8 pt-6 border-t border-gray-200">
                   <p className="text-sm text-gray-500 text-center mb-4 font-medium">Tài khoản demo:</p>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
@@ -196,7 +196,7 @@ const LoginPage: React.FC = () => {
                       <span className="text-gray-600">contact@nguyendu.edu.vn / school123</span>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
