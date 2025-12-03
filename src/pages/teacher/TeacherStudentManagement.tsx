@@ -171,13 +171,20 @@ const TeacherStudentManagement: React.FC = () => {
   };
 
   // Form handlers
+  const convertDateToBackendFormat = (dateString: string): string => {
+    // Convert YYYY-MM-DD to DD/MM/YYYY
+    if (!dateString) return '';
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setSaving(true);
       await teacherApiService.createStudent(
         formData.full_name,
-        formData.date_of_birth,
+        convertDateToBackendFormat(formData.date_of_birth),
         formData.class_name || undefined,
         formData.parent_email || undefined
       );
@@ -203,7 +210,7 @@ const TeacherStudentManagement: React.FC = () => {
       await teacherApiService.updateStudent(
         selectedStudent.id,
         editFormData.full_name,
-        editFormData.date_of_birth,
+        convertDateToBackendFormat(editFormData.date_of_birth),
         editFormData.class_name || undefined,
         editFormData.parent_email || undefined
       );
@@ -230,6 +237,30 @@ const TeacherStudentManagement: React.FC = () => {
     } catch (error) {
       console.error('Error deleting student:', error);
       showError('Không thể xóa học sinh. Vui lòng thử lại.');
+    }
+  };
+
+  const convertDateFromBackend = (backendDate: string | null | undefined): string => {
+    // Convert DD/MM/YYYY from backend or ISO date to YYYY-MM-DD for HTML input
+    if (!backendDate) return '';
+    
+    // If it's already in ISO format (YYYY-MM-DD), return as is
+    if (backendDate.includes('-') && backendDate.length === 10) {
+      return backendDate;
+    }
+    
+    // If it's in DD/MM/YYYY format, convert to YYYY-MM-DD
+    if (backendDate.includes('/')) {
+      const [day, month, year] = backendDate.split('/');
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    
+    // If it's a full datetime string, extract date part
+    try {
+      const date = new Date(backendDate);
+      return date.toISOString().split('T')[0];
+    } catch {
+      return '';
     }
   };
 
@@ -270,7 +301,7 @@ const TeacherStudentManagement: React.FC = () => {
       setSelectedStudent(studentWithExtras);
       setEditFormData({
         full_name: student.full_name,
-        date_of_birth: student.date_of_birth || '',
+        date_of_birth: convertDateFromBackend(student.date_of_birth),
         class_name: localStudent?.class_name || '',
         parent_email: parentInfo?.email || localStudent?.parent_email || ''
       });
@@ -284,7 +315,7 @@ const TeacherStudentManagement: React.FC = () => {
     setSelectedStudent(student);
     setEditFormData({
       full_name: student.full_name,
-      date_of_birth: student.date_of_birth || '',
+      date_of_birth: convertDateFromBackend(student.date_of_birth),
       class_name: student.class_name || '',
       parent_email: student.parent_email || ''
     });
