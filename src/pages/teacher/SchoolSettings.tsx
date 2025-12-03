@@ -133,7 +133,7 @@ const SchoolSettings: React.FC = () => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const response = await fetch('https://safenestai.onrender.com/api/school/profile', {
+        const response = await fetch('http://127.0.0.1:8000/api/school/profile', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('smart-child-token')}`
           }
@@ -206,7 +206,7 @@ const SchoolSettings: React.FC = () => {
     
     setLoading(true);
     try {
-      const response = await fetch('https://safenestai.onrender.com/api/school/system-settings', {
+      const response = await fetch('http://127.0.0.1:8000/api/school/system-settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -245,7 +245,7 @@ const SchoolSettings: React.FC = () => {
     
     setLoading(true);
     try {
-      const response = await fetch('https://safenestai.onrender.com/api/school/notification-settings', {
+      const response = await fetch('http://127.0.0.1:8000/api/school/notification-settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -284,7 +284,7 @@ const SchoolSettings: React.FC = () => {
     
     setLoading(true);
     try {
-      const response = await fetch('https://safenestai.onrender.com/api/school/security-settings', {
+      const response = await fetch('http://127.0.0.1:8000/api/school/security-settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -19,7 +19,7 @@ const PaymentSuccessPage: React.FC = () => {
   const checkPaymentByOrderCode = async (orderCode: string) => {
     try {
       const token = localStorage.getItem('smart-child-token')
-      const response = await fetch(`https://safenestai.onrender.com/api/paypos/status/${orderCode}`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/paypos/status/${orderCode}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -55,7 +55,7 @@ const PaymentSuccessPage: React.FC = () => {
       
       // Nếu không tìm thấy hoặc không có orderCode, fetch bằng paymentId
       if (!payment && paymentId) {
-        const response = await fetch(`https://safenestai.onrender.com/api/payments/${paymentId}`, {
+        const response = await fetch(`http://127.0.0.1:8000/api/payments/${paymentId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
