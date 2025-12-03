@@ -1,7 +1,7 @@
 // Admin API Service - Kết nối với backend SafeNest AI
 import { authService } from './authService'
 
-const API_BASE_URL = 'https://safenestai.onrender.com'
+const API_BASE_URL = 'http://127.0.0.1:8000'
 
 // Types cho User Management
 export interface User {

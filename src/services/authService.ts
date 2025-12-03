@@ -1,5 +1,5 @@
-// API Base URL - adjust this to match your backend server
-const API_BASE_URL = 'https://safenestai.onrender.com'
+// API Base URL - Local development server
+const API_BASE_URL = 'http://127.0.0.1:8000'
 
 // Types for API responses
 export interface LoginRequest {
