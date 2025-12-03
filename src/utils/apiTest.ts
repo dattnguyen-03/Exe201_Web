@@ -48,7 +48,7 @@ export const testApiConnection = async () => {
     console.error('❌ API Test Failed:', error);
     return {
       success: false,
-      error: error.message
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 };
